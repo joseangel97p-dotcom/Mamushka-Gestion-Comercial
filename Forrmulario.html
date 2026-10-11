@@ -1,0 +1,1135 @@
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #fdf1f5;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    background: #fff;
+    max-width: 440px;
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, #e75480, #f7a8c4);
+    color: #fff;
+    padding: 22px;
+    text-align: center;
+    position: relative;
+  }
+  .header h1 { margin: 0; font-size: 20px; }
+  .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  .volver {
+    position: absolute; left: 16px; top: 22px;
+    color: #fff; background: none; border: none;
+    font-size: 14px; cursor: pointer;
+  }
+  .body { padding: 22px; }
+  label { display: block; font-size: 13px; color: #888; margin: 14px 0 4px; font-weight: 600; }
+  input, select {
+    width: 100%; padding: 10px 12px; border: 1px solid #eed6de;
+    border-radius: 8px; font-size: 14px; background: #fffafb;
+  }
+  input:focus, select:focus { outline: none; border-color: #e75480; }
+  .opcional { color: #bbb; font-weight: 400; }
+  .btn {
+    width: 100%; background: #e75480; color: #fff; border: none;
+    padding: 14px; border-radius: 10px; font-weight: 600; font-size: 15px;
+    margin-top: 20px; cursor: pointer;
+  }
+  .btn:hover { opacity: 0.92; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secundario {
+    width: 100%; background: #fff; color: #e75480; border: 1.5px solid #e75480;
+    padding: 14px; border-radius: 10px; font-weight: 600; font-size: 15px;
+    margin-top: 12px; cursor: pointer;
+  }
+  .btn-wpp {
+    display: block; text-align: center; background: #25D366; color: #fff;
+    text-decoration: none; padding: 14px; border-radius: 10px;
+    font-weight: 600; margin-top: 18px; font-size: 15px; cursor: pointer; border: none; width: 100%;
+  }
+  .btn-nuevo {
+    display: block; text-align: center; background: none; border: 1px solid #ddd;
+    color: #888; padding: 10px; border-radius: 8px; margin-top: 12px;
+    cursor: pointer; font-size: 13px; width: 100%;
+  }
+  .error { color: #c0392b; font-size: 13px; margin-top: 10px; display: none; }
+  .resumen { background: #fff6f9; border-radius: 10px; padding: 14px; font-size: 14px; color: #555; }
+  .resumen div { display: flex; justify-content: space-between; padding: 4px 0; }
+
+  /* --- Consolidados clickeables --- */
+  .consolidado { background: #fff6f9; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 12px; }
+  .consolidado .monto { font-size: 24px; font-weight: 700; color: #e75480; cursor: pointer; }
+  .consolidado .label { font-size: 12px; color: #999; cursor: pointer; }
+  .detalle-consolidado {
+    display: none; text-align: left; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.08); font-size: 12px; color: #666; max-height: 200px; overflow-y: auto; cursor: default;
+  }
+  .detalle-consolidado div { display: flex; justify-content: space-between; padding: 3px 0; }
+  .consolidado.abierto .detalle-consolidado { display: block; }
+  .tabs-ventas { display: flex; gap: 8px; margin-bottom: 10px; }
+  .tab-venta {
+    flex: 1; text-align: center; padding: 6px; border-radius: 8px; font-size: 12px;
+    font-weight: 600; cursor: pointer; background: #fff; color: #999; border: 1px solid #f0d9e0;
+  }
+  .tab-venta.activo { background: #e75480; color: #fff; border-color: #e75480; }
+
+  /* --- Lista de clientes con crédito --- */
+  .lista-clientes { max-height: 260px; overflow-y: auto; margin-bottom: 10px; }
+  .cliente-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 13px;
+  }
+  .cliente-item .punto { width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+  .cliente-nombre { display: flex; align-items: center; }
+  .cliente-datos { text-align: right; }
+  .cliente-datos .saldo { font-weight: 700; color: #555; }
+  .cliente-datos .vence { font-size: 11px; color: #999; }
+  .rojo { background: #fdecea; } .rojo .punto { background: #e74c3c; }
+  .amarillo { background: #fff8e6; } .amarillo .punto { background: #f0ad4e; }
+  .verde { background: #eafaf0; } .verde .punto { background: #2ecc71; }
+  .vacio { text-align: center; color: #bbb; font-size: 13px; padding: 20px 0; }
+  .loading { text-align: center; color: #bbb; font-size: 13px; padding: 20px 0; }
+
+  /* --- Bloques dinámicos de prendas --- */
+  .bloque-prenda { background: #fff6f9; border-radius: 10px; padding: 12px; margin-top: 12px; position: relative; }
+  .bloque-prenda .quitar {
+    position: absolute; top: 8px; right: 8px; background: none; border: none;
+    color: #bbb; font-size: 16px; cursor: pointer; padding: 0;
+  }
+  .total-venta {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fdf1f5; border-radius: 10px; padding: 12px 14px; margin-top: 16px;
+  }
+  .total-venta span { font-size: 13px; color: #888; }
+  .total-venta strong { font-size: 20px; color: #e75480; }
+
+  /* --- Checkbox: modo pago de crédito dentro de Registrar ingreso --- */
+  .check-linea {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff6f9; border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 16px; cursor: pointer; user-select: none;
+  }
+  .check-linea input[type="checkbox"] {
+    width: 20px; height: 20px; accent-color: #e75480; cursor: pointer;
+    flex-shrink: 0; margin: 0;
+  }
+  .check-linea span { font-size: 14px; color: #555; font-weight: 600; }
+
+  /* --- Stock --- */
+  .producto-stock {
+    background: #fff6f9; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .producto-stock .categoria-chip { font-size: 11px; color: #e75480; font-weight: 700; text-transform: uppercase; }
+  .producto-stock .descripcion { font-size: 14px; color: #333; font-weight: 600; margin-top: 2px; }
+  .producto-stock .detalles { font-size: 12px; color: #999; margin-top: 3px; }
+  .producto-stock .der { text-align: right; margin-left: 10px; white-space: nowrap; }
+  .producto-stock .precio-con { font-size: 15px; font-weight: 700; color: #e75480; }
+  .producto-stock .precio-sin { font-size: 11px; color: #999; }
+  .producto-stock .cantidad-ok { font-size: 11px; color: #2ecc71; margin-top: 3px; font-weight: 600; }
+  .producto-stock .sin-stock { font-size: 11px; color: #e74c3c; margin-top: 3px; font-weight: 600; }
+  .contador-stock { font-size: 12px; color: #999; margin: 4px 0 10px; }
+
+  /* --- Modal: Registrar compra --- */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(45,20,30,0.45);
+    z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.abierto { display: flex; }
+  .modal-card {
+    background: #fff; width: 100%; max-width: 400px; max-height: 90vh;
+    overflow-y: auto; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal-header {
+    background: linear-gradient(135deg, #e75480, #f7a8c4); color: #fff;
+    padding: 18px 22px; border-radius: 16px 16px 0 0; position: relative;
+  }
+  .modal-header h2 { margin: 0; font-size: 17px; }
+  .modal-cerrar {
+    position: absolute; right: 12px; top: 12px; background: none; border: none;
+    color: #fff; font-size: 20px; line-height: 1; cursor: pointer; padding: 6px;
+  }
+  .modal-body { padding: 20px 22px 22px; }
+</style>
+
+<div class="card">
+  <div class="header" id="header">
+    <h1>🌸 Mamushka</h1>
+    <p id="subtitulo">Menú</p>
+  </div>
+  <div class="body">
+
+    <!-- ================= MENÚ ================= -->
+    <div id="vistaMenu">
+      <div class="consolidado" id="consolidadoVentas">
+        <div class="tabs-ventas">
+          <div class="tab-venta activo" id="tabHoy" onclick="event.stopPropagation(); cambiarTabVentas('hoy')">Hoy</div>
+          <div class="tab-venta" id="tabMes" onclick="event.stopPropagation(); cambiarTabVentas('mes')">Mes</div>
+        </div>
+        <div onclick="toggleConsolidado('consolidadoVentas')">
+          <div class="monto" id="ventasMonto">$0</div>
+          <div class="label" id="ventasLabel">cargando...</div>
+          <div class="detalle-consolidado" id="detalleVentas"></div>
+        </div>
+      </div>
+
+      <div class="consolidado" id="consolidadoCreditos" onclick="toggleConsolidado('consolidadoCreditos')">
+        <div class="monto" id="totalPendiente">$0</div>
+        <div class="label" id="cantidadCreditos">cargando...</div>
+        <div class="detalle-consolidado" id="listaClientes">
+          <div class="loading">Cargando clientes...</div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="mostrarForm3()">🛍️ Registrar ingreso</button>
+      <button class="btn-secundario" onclick="mostrarFormGasto()">💸 Registrar gasto</button>
+      <button class="btn-secundario" onclick="abrirModalCompra()">🧾 Registrar compra</button>
+      <button class="btn-secundario" onclick="mostrarStock()">📦 Stock</button>
+    </div>
+
+    <!-- ================= FORM 3: CARGAR VENTA / REGISTRAR INGRESO ================= -->
+    <div id="vistaForm3" style="display:none;">
+
+      <label class="check-linea">
+        <input type="checkbox" id="chkPagoCredito" onchange="toggleModoIngreso()">
+        <span>Registrar pago de crédito personal</span>
+      </label>
+
+      <!-- Modo pago de crédito (antes botón/vista independiente "Registrar pago") -->
+      <div id="vistaForm2" style="display:none;">
+        <div id="form2Campos">
+          <label>Cliente</label>
+          <select id="selectCliente" onchange="mostrarSaldoSeleccionado()">
+            <option value="">Cargando clientes...</option>
+          </select>
+
+          <div class="resumen" id="saldoCliente" style="display:none; margin-top:12px;"></div>
+
+          <label>Monto que paga ahora ($)</label>
+          <input id="montoPagado" type="text" inputmode="numeric" oninput="formatearInput(this)">
+
+          <label>Método de pago</label>
+          <select id="metodoPago" onchange="cambiarMetodoPagoForm2()">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Débito">Débito</option>
+            <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+          </select>
+
+          <div id="camposTarjetaForm2" style="display:none;">
+            <label>Cuotas</label>
+            <input id="pagoCuotas" type="text" inputmode="numeric" placeholder="Ej: 3">
+            <label>Con qué tarjeta <span class="opcional">(opcional)</span></label>
+            <input id="pagoTarjeta" type="text" placeholder="Ej: Visa Banco Galicia">
+          </div>
+
+          <button class="btn" id="btnRegistrarPago" onclick="registrarPago()">Registrar pago</button>
+          <div class="error" id="errorForm2"></div>
+        </div>
+
+        <div id="resultadoForm2" style="display:none;">
+          <div class="resumen" id="resumenForm2"></div>
+          <a class="btn-wpp" id="linkWhatsAppForm2" href="#" target="_blank">📲 Enviar por WhatsApp</a>
+          <button class="btn-nuevo" onclick="prepararFormPago(true)">+ Registrar otro pago</button>
+        </div>
+      </div>
+
+      <!-- Modo venta (por defecto) -->
+      <div id="modoVenta">
+      <div id="form3Campos">
+        <div id="prendasVentaContainer"></div>
+        <button class="btn-nuevo" id="btnAgregarPrendaVenta" onclick="agregarBloquePrendaVenta()" style="border-color:#e75480; color:#e75480;">+ Agregar prenda</button>
+
+        <div class="total-venta">
+          <span>Total</span>
+          <strong id="totalVentaMonto">$0</strong>
+        </div>
+
+        <label>Método de pago</label>
+        <select id="ventaMetodoPago" onchange="cambiarMetodoPagoVenta()">
+          <option value="Efectivo">Efectivo</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="Débito">Débito</option>
+          <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+          <option value="Crédito personal">Crédito personal</option>
+        </select>
+
+        <div id="camposTarjetaVenta" style="display:none;">
+          <label>Cuotas</label>
+          <input id="ventaCuotas" type="text" inputmode="numeric" placeholder="Ej: 3">
+          <label>Con qué tarjeta <span class="opcional">(opcional)</span></label>
+          <input id="ventaTarjeta" type="text" placeholder="Ej: Visa Banco Galicia">
+        </div>
+
+        <div id="camposCreditoPersonal" style="display:none;">
+          <label>Nombre</label>
+          <input id="ventaCredNombre" type="text">
+
+          <label>Apellido</label>
+          <input id="ventaCredApellido" type="text">
+
+          <label>N° Celular</label>
+          <input id="ventaCredCelular" type="tel" placeholder="Ej: 11 1234 5678">
+
+          <label>Monto entrega ($)</label>
+          <input id="ventaCredEntrega" type="text" inputmode="numeric" oninput="formatearInput(this)">
+
+          <label>Método de pago de la entrega</label>
+          <select id="ventaCredMetodoEntrega" onchange="cambiarMetodoPagoEntregaCredito()">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Débito">Débito</option>
+            <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+          </select>
+
+          <div id="camposTarjetaEntregaCredito" style="display:none;">
+            <label>Cuotas</label>
+            <input id="ventaCredEntregaCuotas" type="text" inputmode="numeric" placeholder="Ej: 3">
+            <label>Con qué tarjeta <span class="opcional">(opcional)</span></label>
+            <input id="ventaCredEntregaTarjeta" type="text" placeholder="Ej: Visa Banco Galicia">
+          </div>
+
+          <label>Fecha de vencimiento</label>
+          <input id="ventaCredVencimiento" type="date">
+        </div>
+
+        <button class="btn" id="btnCargarVenta" onclick="cargarVenta()">Cargar venta</button>
+        <div class="error" id="errorForm3"></div>
+      </div>
+
+      <div id="postVentaCampos" style="display:none;">
+        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Venta cargada ✅<br>Se sumó al total de hoy.</p>
+        <p style="font-size:13px; color:#888; margin-bottom:10px; text-align:center;">¿Enviar comprobante por WhatsApp?</p>
+
+        <div id="datosClienteVenta" style="display:none;">
+          <label>Nombre</label>
+          <input id="postNombre" type="text">
+          <label>Apellido <span class="opcional">(opcional)</span></label>
+          <input id="postApellido" type="text">
+          <label>N° Celular</label>
+          <input id="postCelular" type="tel" placeholder="Ej: 11 1234 5678">
+          <button class="btn-wpp" id="btnEnviarComprobante" onclick="enviarComprobantePostVenta()">📲 Enviar por WhatsApp</button>
+          <div class="error" id="errorPostVenta"></div>
+        </div>
+
+        <button class="btn" id="btnQuierePreguntaEnviar" onclick="mostrarDatosClienteVenta()">Sí, enviar</button>
+        <button class="btn-nuevo" onclick="mostrarForm3(true)">No por ahora / Cargar otra venta</button>
+      </div>
+
+      <div id="resultadoCreditoPersonal" style="display:none;">
+        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Crédito personal cargado ✅<br>Se sumó al total de hoy.</p>
+        <div class="resumen" id="resumenCreditoPersonal"></div>
+        <a class="btn-wpp" id="linkWhatsAppCreditoPersonal" href="#" target="_blank">📲 Enviar por WhatsApp</a>
+        <button class="btn-nuevo" onclick="mostrarForm3()">+ Cargar otra venta</button>
+      </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================= FORM 4: REGISTRAR GASTO ================= -->
+    <div id="vistaFormGasto" style="display:none;">
+      <div class="consolidado" id="consolidadoGasto" onclick="toggleConsolidado('consolidadoGasto')">
+        <div class="monto" id="montoGastoMes">$0</div>
+        <div class="label" id="labelGastoMes">cargando...</div>
+        <div class="detalle-consolidado" id="detalleGastoMes"></div>
+      </div>
+
+      <label>Categoría</label>
+      <select id="categoriaGasto"></select>
+
+      <label>Monto ($)</label>
+      <input id="montoGasto" type="text" inputmode="numeric" oninput="formatearInput(this)">
+
+      <label>Observaciones <span class="opcional">(opcional)</span></label>
+      <input id="obsGasto" type="text" placeholder="Ej: Incluye luz y agua">
+
+      <button class="btn" id="btnGuardarGasto" onclick="guardarGasto()">Guardar gasto</button>
+      <div class="error" id="errorGasto"></div>
+    </div>
+
+    <!-- ================= FORM 5: STOCK (solo consulta) ================= -->
+    <div id="vistaStock" style="display:none;">
+      <input type="text" id="buscadorStock" placeholder="Buscar por descripción, marca o color..." oninput="filtrarStock()">
+      <select id="categoriaStock" onchange="filtrarStock()"></select>
+
+      <div class="contador-stock" id="contadorStock"></div>
+      <div id="listaStock"><div class="loading">Cargando stock...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= MODAL: REGISTRAR COMPRA ================= -->
+<div class="modal-overlay" id="modalCompra" onclick="if(event.target===this) cerrarModalCompra()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>🧾 Registrar compra</h2>
+      <button type="button" class="modal-cerrar" onclick="cerrarModalCompra()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div id="compraFormCampos">
+        <label>Fecha</label>
+        <input id="compraFecha" type="date">
+
+        <label>Proveedor</label>
+        <input id="compraProveedor" type="text" placeholder="Ej: Mayorista Córdoba">
+
+        <label>Valor de la compra ($)</label>
+        <input id="compraValor" type="text" inputmode="numeric" oninput="formatearInput(this); calcularInversionCompra();">
+
+        <label>Transporte ($) <span class="opcional">(opcional)</span></label>
+        <input id="compraTransporte" type="text" inputmode="numeric" oninput="formatearInput(this); calcularInversionCompra();">
+
+        <div class="total-venta">
+          <span>Inversión total</span>
+          <strong id="compraInversionTotal">$0</strong>
+        </div>
+
+        <label>Observaciones <span class="opcional">(opcional)</span></label>
+        <input id="compraObs" type="text" placeholder="Ej: Temporada invierno">
+
+        <button class="btn" id="btnGuardarCompra" onclick="guardarCompra()">Guardar compra</button>
+        <button class="btn-nuevo" onclick="cerrarModalCompra()">Cancelar</button>
+        <div class="error" id="errorCompra"></div>
+      </div>
+
+      <div id="compraResultado" style="display:none;">
+        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Compra registrada ✅</p>
+        <div class="resumen" id="resumenCompra"></div>
+        <button class="btn" onclick="abrirModalCompra()">+ Registrar otra compra</button>
+        <button class="btn-nuevo" onclick="cerrarModalCompra()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var TIPOS_PRENDA = ["Jean","Remera","Campera","Buzo/Sweater","Vestido","Pantalón","Camisa","Tapado/Blazer","Calzado","Lencería","Pijama","Packs","Pantuflas","Chaleco","Corpiño","Body","Top","Pollera/Falda","Accesorios","Otro"];
+  var CATEGORIAS_GASTO = ["🏠 Alquiler","💡 Luz","🔥 Gas","📋 Monotributo","📄 Habilitación","🌐 Internet","🧑‍💼 Ayudante","🧮 Contador","🔧 Otros"];
+  var clientesConSaldoCache = [];
+  var ventaFilaIndex = null;
+
+  /* ---------- Navegación entre vistas ---------- */
+
+  function ocultarTodo() {
+    ['vistaMenu','vistaForm3','vistaFormGasto','vistaStock'].forEach(function(id){
+      document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById('volverBtn') && document.getElementById('volverBtn').remove();
+  }
+
+  function agregarBotonVolver() {
+    var header = document.getElementById('header');
+    var btn = document.createElement('button');
+    btn.id = 'volverBtn';
+    btn.className = 'volver';
+    btn.textContent = '← Menú';
+    btn.onclick = mostrarMenu;
+    header.appendChild(btn);
+  }
+
+  function mostrarMenu() {
+    ocultarTodo();
+    document.getElementById('subtitulo').textContent = 'Menú';
+    document.getElementById('vistaMenu').style.display = 'block';
+    cargarDatosMenu();
+  }
+
+  function toggleConsolidado(id) {
+    document.getElementById(id).classList.toggle('abierto');
+  }
+
+  function formatearInput(input) {
+    var soloNumeros = input.value.replace(/\D/g, "");
+    input.value = soloNumeros.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  // Devuelve la fecha de HOY en horario local como "YYYY-MM-DD".
+  // No usa new Date().toISOString() directo porque eso da la fecha en UTC,
+  // y de noche en Argentina (UTC-3) ya sería el día siguiente en UTC.
+  function fechaLocalISO() {
+    var ahora = new Date();
+    var conOffset = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000);
+    return conOffset.toISOString().split('T')[0];
+  }
+
+  /* ---------- Menú: consolidados ---------- */
+
+  var datosMenuCache = null;
+  var tabVentaActiva = 'hoy';
+
+  function cambiarTabVentas(tab) {
+    tabVentaActiva = tab;
+    document.getElementById('tabHoy').classList.toggle('activo', tab === 'hoy');
+    document.getElementById('tabMes').classList.toggle('activo', tab === 'mes');
+    pintarVentas();
+  }
+
+  function pintarVentas() {
+    if (!datosMenuCache) return;
+    var datos = tabVentaActiva === 'hoy' ? datosMenuCache.ventasHoy : datosMenuCache.ventasMes;
+    var etiquetaPeriodo = tabVentaActiva === 'hoy' ? 'hoy' : 'este mes';
+
+    document.getElementById('ventasMonto').textContent = '$' + datos.total;
+    document.getElementById('ventasLabel').textContent = datos.cantidad + (datos.cantidad === 1 ? ' venta ' : ' ventas ') + etiquetaPeriodo + ' · tocar para ver detalle';
+
+    var detalleDiv = document.getElementById('detalleVentas');
+    detalleDiv.innerHTML = datos.detalle.length === 0
+      ? '<div class="vacio">Sin ventas todavía</div>'
+      : datos.detalle.map(function (v) {
+          var prefijo = (tabVentaActiva === 'mes' && v.fecha) ? v.fecha + ' — ' : '';
+          return '<div><span>' + prefijo + v.cliente + '</span><strong>' + v.productos + ' — $' + v.monto + '</strong></div>';
+        }).join('');
+  }
+
+  function cargarDatosMenu() {
+    google.script.run
+      .withSuccessHandler(function (datos) {
+        datosMenuCache = datos;
+        pintarVentas();
+
+        document.getElementById('totalPendiente').textContent = '$' + datos.totalPendiente;
+        document.getElementById('cantidadCreditos').textContent = datos.cantidad + (datos.cantidad === 1 ? ' crédito pendiente · tocar para ver detalle' : ' créditos pendientes · tocar para ver detalle');
+
+        var lista = document.getElementById('listaClientes');
+        if (datos.clientes.length === 0) {
+          lista.innerHTML = '<div class="vacio">No hay créditos pendientes 🎉</div>';
+          return;
+        }
+        lista.innerHTML = datos.clientes.map(function (c) {
+          return '<div class="cliente-item ' + c.color + '">' +
+                   '<span class="cliente-nombre"><span class="punto"></span>' + c.nombreCompleto + '</span>' +
+                   '<span class="cliente-datos"><div class="saldo">$' + c.saldo + '</div><div class="vence">vence ' + c.fechaVencimiento + (c.vencido ? ' ⚠️' : '') + '</div></span>' +
+                 '</div>';
+        }).join('');
+      })
+      .withFailureHandler(function (err) {
+        document.getElementById('listaClientes').innerHTML = '<div class="vacio">Error cargando datos</div>';
+      })
+      .obtenerDatosMenu();
+  }
+
+  /* ---------- Form 2: Registrar pago ---------- */
+
+  /**
+   * Prepara los campos del modo "pago de crédito" (dentro de Registrar
+   * ingreso). Ya NO navega ni oculta otras vistas — de eso se encarga
+   * toggleModoIngreso() o mostrarForm3(), que son quienes la llaman.
+   */
+  function prepararFormPago(limpiar) {
+    if (limpiar) {
+      document.getElementById('montoPagado').value = '';
+      document.getElementById('btnRegistrarPago').disabled = false;
+      document.getElementById('btnRegistrarPago').textContent = 'Registrar pago';
+      document.getElementById('saldoCliente').style.display = 'none';
+    }
+
+    document.getElementById('metodoPago').value = 'Efectivo';
+    document.getElementById('pagoCuotas').value = '';
+    document.getElementById('pagoTarjeta').value = '';
+    document.getElementById('camposTarjetaForm2').style.display = 'none';
+
+    document.getElementById('form2Campos').style.display = 'block';
+    document.getElementById('resultadoForm2').style.display = 'none';
+    cargarClientesConSaldo();
+  }
+
+  /**
+   * Alterna entre "modo venta" (por defecto) y "modo pago de crédito"
+   * dentro de Registrar ingreso, según el checkbox de arriba. No navega
+   * a otra vista: ambos modos viven dentro de vistaForm3.
+   */
+  function toggleModoIngreso() {
+    var esPago = document.getElementById('chkPagoCredito').checked;
+    document.getElementById('modoVenta').style.display = esPago ? 'none' : 'block';
+    document.getElementById('vistaForm2').style.display = esPago ? 'block' : 'none';
+    document.getElementById('subtitulo').textContent = esPago ? 'Registrar pago' : 'Registrar ingreso';
+
+    if (esPago) {
+      prepararFormPago(true);
+    }
+  }
+
+  function cambiarMetodoPagoForm2() {
+    var metodo = document.getElementById('metodoPago').value;
+    document.getElementById('camposTarjetaForm2').style.display = (metodo === 'Tarjeta de crédito') ? 'block' : 'none';
+  }
+
+  function cargarClientesConSaldo() {
+    var select = document.getElementById('selectCliente');
+    select.innerHTML = '<option value="">Cargando...</option>';
+
+    google.script.run
+      .withSuccessHandler(function (clientes) {
+        clientesConSaldoCache = clientes;
+        if (clientes.length === 0) {
+          select.innerHTML = '<option value="">No hay clientes con saldo pendiente</option>';
+          return;
+        }
+        select.innerHTML = '<option value="">Seleccioná un cliente...</option>' +
+          clientes.map(function (c, i) {
+            return '<option value="' + i + '">' + c.nombreCompleto + ' — $' + c.saldoMostrar + (c.vencido ? ' ⚠️ vencido' : '') + '</option>';
+          }).join('');
+      })
+      .withFailureHandler(function (err) {
+        select.innerHTML = '<option value="">Error cargando clientes</option>';
+      })
+      .obtenerClientesConSaldo();
+  }
+
+  function mostrarSaldoSeleccionado() {
+    var indice = document.getElementById('selectCliente').value;
+    var saldoDiv = document.getElementById('saldoCliente');
+
+    if (indice === '') {
+      saldoDiv.style.display = 'none';
+      return;
+    }
+
+    var cliente = clientesConSaldoCache[indice];
+    saldoDiv.style.display = 'block';
+    saldoDiv.innerHTML =
+      '<div><span>Saldo actual</span><strong>$' + cliente.saldoMostrar + '</strong></div>' +
+      (cliente.vencido ? '<div><span>Estado</span><strong style="color:#e74c3c;">Vencido (recargo incluido)</strong></div>' : '');
+  }
+
+  function registrarPago() {
+    var indice = document.getElementById('selectCliente').value;
+    var errorDiv = document.getElementById('errorForm2');
+    errorDiv.style.display = 'none';
+
+    if (indice === '') {
+      errorDiv.textContent = 'Seleccioná un cliente.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var montoPagado = document.getElementById('montoPagado').value;
+    if (!montoPagado) {
+      errorDiv.textContent = 'Ingresá el monto que está pagando.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var cliente = clientesConSaldoCache[indice];
+    var datos = {
+      idCredito: cliente.idCredito,
+      montoPagado: montoPagado,
+      metodoPago: document.getElementById('metodoPago').value,
+      cuotas: document.getElementById('pagoCuotas').value,
+      tarjeta: document.getElementById('pagoTarjeta').value.trim()
+    };
+
+    var boton = document.getElementById('btnRegistrarPago');
+    boton.disabled = true;
+    boton.textContent = 'Registrando...';
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        document.getElementById('form2Campos').style.display = 'none';
+        document.getElementById('resultadoForm2').style.display = 'block';
+        document.getElementById('linkWhatsAppForm2').href = resultado.urlWhatsApp;
+        document.getElementById('resumenForm2').innerHTML =
+          '<div><span>Cliente</span><strong>' + resultado.nombre + '</strong></div>' +
+          '<div><span>Estado</span><strong>' + resultado.estado + '</strong></div>' +
+          '<div><span>Saldo restante</span><strong>$' + resultado.saldoRestante + '</strong></div>';
+      })
+      .withFailureHandler(function (err) {
+        boton.disabled = false;
+        boton.textContent = 'Registrar pago';
+        errorDiv.textContent = 'Ocurrió un error: ' + err.message;
+        errorDiv.style.display = 'block';
+      })
+      .procesarPago(datos);
+  }
+
+  /* ---------- Form 3: Cargar venta ---------- */
+
+  var contadorPrendasVenta = 0;
+
+  function mostrarForm3() {
+    ocultarTodo();
+    agregarBotonVolver();
+    document.getElementById('subtitulo').textContent = 'Registrar ingreso';
+    document.getElementById('vistaForm3').style.display = 'block';
+
+    // Por defecto siempre entra en modo venta (checkbox desmarcado),
+    // que es el registro más frecuente.
+    document.getElementById('chkPagoCredito').checked = false;
+    document.getElementById('modoVenta').style.display = 'block';
+    document.getElementById('vistaForm2').style.display = 'none';
+
+    document.getElementById('prendasVentaContainer').innerHTML = '';
+    contadorPrendasVenta = 0;
+    agregarBloquePrendaVenta();
+    document.getElementById('btnCargarVenta').disabled = false;
+    document.getElementById('btnCargarVenta').textContent = 'Cargar venta';
+    ventaFilaIndex = null;
+    calcularTotalVenta();
+
+    ['postNombre','postApellido','postCelular','ventaCuotas','ventaTarjeta',
+     'ventaCredNombre','ventaCredApellido','ventaCredCelular','ventaCredEntrega',
+     'ventaCredEntregaCuotas','ventaCredEntregaTarjeta'].forEach(function(id){
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('ventaCredVencimiento').value = '';
+
+    document.getElementById('ventaMetodoPago').value = 'Efectivo';
+    document.getElementById('camposTarjetaVenta').style.display = 'none';
+    document.getElementById('camposCreditoPersonal').style.display = 'none';
+    document.getElementById('ventaCredMetodoEntrega').value = 'Efectivo';
+    document.getElementById('camposTarjetaEntregaCredito').style.display = 'none';
+
+    document.getElementById('form3Campos').style.display = 'block';
+    document.getElementById('postVentaCampos').style.display = 'none';
+    document.getElementById('resultadoCreditoPersonal').style.display = 'none';
+    document.getElementById('datosClienteVenta').style.display = 'none';
+    document.getElementById('btnQuierePreguntaEnviar').style.display = 'block';
+  }
+
+  function cambiarMetodoPagoVenta() {
+    var metodo = document.getElementById('ventaMetodoPago').value;
+    document.getElementById('camposTarjetaVenta').style.display = (metodo === 'Tarjeta de crédito') ? 'block' : 'none';
+    document.getElementById('camposCreditoPersonal').style.display = (metodo === 'Crédito personal') ? 'block' : 'none';
+    document.getElementById('btnCargarVenta').textContent = (metodo === 'Crédito personal') ? 'Cargar crédito' : 'Cargar venta';
+  }
+
+  function cambiarMetodoPagoEntregaCredito() {
+    var metodo = document.getElementById('ventaCredMetodoEntrega').value;
+    document.getElementById('camposTarjetaEntregaCredito').style.display = (metodo === 'Tarjeta de crédito') ? 'block' : 'none';
+  }
+
+  function agregarBloquePrendaVenta() {
+    var container = document.getElementById('prendasVentaContainer');
+    if (container.children.length >= 4) return;
+
+    contadorPrendasVenta++;
+    var id = 'v' + contadorPrendasVenta;
+    var esPrimera = container.children.length === 0;
+    var opciones = TIPOS_PRENDA.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+
+    var div = document.createElement('div');
+    div.className = 'bloque-prenda';
+    div.id = 'prenda-' + id;
+    div.innerHTML =
+      (esPrimera ? '' : '<button type="button" class="quitar" onclick="quitarBloquePrendaVenta(\'' + id + '\')">✕</button>') +
+      '<label style="margin-top:0;">Tipo de prenda</label>' +
+      '<select id="tipo-' + id + '">' + opciones + '</select>' +
+      '<label>Descripción <span class="opcional">(opcional)</span></label>' +
+      '<input type="text" id="descripcion-' + id + '" placeholder="Ej: azul talle 40">' +
+      '<label>Precio ($)</label>' +
+      '<input type="text" id="precio-' + id + '" inputmode="numeric" oninput="formatearInput(this); calcularTotalVenta();">';
+
+    container.appendChild(div);
+    if (container.children.length >= 4) document.getElementById('btnAgregarPrendaVenta').style.display = 'none';
+    calcularTotalVenta();
+  }
+
+  function quitarBloquePrendaVenta(id) {
+    var el = document.getElementById('prenda-' + id);
+    if (el) el.remove();
+    document.getElementById('btnAgregarPrendaVenta').style.display = 'block';
+    calcularTotalVenta();
+  }
+
+  function calcularTotalVenta() {
+    var total = 0;
+    document.querySelectorAll('#prendasVentaContainer input[id^="precio-"]').forEach(function (input) {
+      total += parseInt(input.value.replace(/\D/g, "")) || 0;
+    });
+    document.getElementById('totalVentaMonto').textContent = '$' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  function recolectarPrendasVenta() {
+    var prendas = [];
+    document.querySelectorAll('#prendasVentaContainer .bloque-prenda').forEach(function (bloque) {
+      var tipo = bloque.querySelector('select[id^="tipo-"]').value;
+      var descripcion = bloque.querySelector('input[id^="descripcion-"]').value.trim();
+      var precio = bloque.querySelector('input[id^="precio-"]').value;
+      if (precio) prendas.push({ tipo: tipo, descripcion: descripcion, precio: precio });
+    });
+    return prendas;
+  }
+
+  function cargarVenta() {
+    var errorDiv = document.getElementById('errorForm3');
+    errorDiv.style.display = 'none';
+    var prendas = recolectarPrendasVenta();
+
+    if (prendas.length === 0) {
+      errorDiv.textContent = 'Cargá al menos el precio de una prenda.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var metodoPago = document.getElementById('ventaMetodoPago').value;
+    var boton = document.getElementById('btnCargarVenta');
+
+    if (metodoPago === 'Crédito personal') {
+      cargarVentaComoCreditoPersonal(prendas, errorDiv, boton);
+      return;
+    }
+
+    var datos = {
+      prendas: prendas,
+      metodoPago: metodoPago,
+      cuotas: document.getElementById('ventaCuotas').value,
+      tarjeta: document.getElementById('ventaTarjeta').value.trim()
+    };
+    boton.disabled = true;
+    boton.textContent = 'Cargando...';
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        boton.disabled = false;
+        boton.textContent = 'Cargar venta';
+        ventaFilaIndex = resultado.filaIndex;
+        document.getElementById('form3Campos').style.display = 'none';
+        document.getElementById('postVentaCampos').style.display = 'block';
+      })
+      .withFailureHandler(function (err) {
+        boton.disabled = false;
+        boton.textContent = 'Cargar venta';
+        errorDiv.textContent = 'Ocurrió un error: ' + err.message;
+        errorDiv.style.display = 'block';
+      })
+      .guardarVenta(datos);
+  }
+
+  function cargarVentaComoCreditoPersonal(prendas, errorDiv, boton) {
+    var nombre = document.getElementById('ventaCredNombre').value.trim();
+    var apellido = document.getElementById('ventaCredApellido').value.trim();
+    var celular = document.getElementById('ventaCredCelular').value.trim();
+    var fechaVencimiento = document.getElementById('ventaCredVencimiento').value;
+
+    if (!nombre || !apellido || !celular || !fechaVencimiento) {
+      errorDiv.textContent = 'Completá Nombre, Apellido, Celular y Fecha de vencimiento del crédito.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var datos = {
+      prendas: prendas,
+      nombre: nombre,
+      apellido: apellido,
+      celular: celular,
+      montoEntrega: document.getElementById('ventaCredEntrega').value,
+      metodoPagoEntrega: document.getElementById('ventaCredMetodoEntrega').value,
+      cuotasEntrega: document.getElementById('ventaCredEntregaCuotas').value,
+      tarjetaEntrega: document.getElementById('ventaCredEntregaTarjeta').value.trim(),
+      fechaVencimiento: fechaVencimiento
+    };
+
+    boton.disabled = true;
+    boton.textContent = 'Cargando...';
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        boton.disabled = false;
+        boton.textContent = 'Cargar crédito';
+        document.getElementById('form3Campos').style.display = 'none';
+        document.getElementById('resultadoCreditoPersonal').style.display = 'block';
+        document.getElementById('linkWhatsAppCreditoPersonal').href = resultado.urlWhatsApp;
+        document.getElementById('resumenCreditoPersonal').innerHTML =
+          '<div><span>Cliente</span><strong>' + resultado.nombre + '</strong></div>' +
+          '<div><span>Total</span><strong>$' + resultado.total + '</strong></div>' +
+          '<div><span>Saldo pendiente</span><strong>$' + resultado.saldoPendiente + '</strong></div>' +
+          '<div><span>Vence</span><strong>' + resultado.fechaFormateada + '</strong></div>';
+      })
+      .withFailureHandler(function (err) {
+        boton.disabled = false;
+        boton.textContent = 'Cargar crédito';
+        errorDiv.textContent = 'Ocurrió un error: ' + err.message;
+        errorDiv.style.display = 'block';
+      })
+      .guardarVentaCreditoPersonal(datos);
+  }
+
+  function mostrarDatosClienteVenta() {
+    document.getElementById('datosClienteVenta').style.display = 'block';
+    document.getElementById('btnQuierePreguntaEnviar').style.display = 'none';
+  }
+
+  function enviarComprobantePostVenta() {
+    var errorDiv = document.getElementById('errorPostVenta');
+    errorDiv.style.display = 'none';
+
+    var nombre = document.getElementById('postNombre').value.trim();
+    var celular = document.getElementById('postCelular').value.trim();
+
+    if (!nombre || !celular) {
+      errorDiv.textContent = 'Completá Nombre y Celular.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var datos = {
+      filaIndex: ventaFilaIndex,
+      nombre: nombre,
+      apellido: document.getElementById('postApellido').value.trim(),
+      celular: celular
+    };
+
+    var boton = document.getElementById('btnEnviarComprobante');
+    boton.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        boton.disabled = false;
+        window.open(resultado.urlWhatsApp, '_blank');
+        mostrarMenu();
+      })
+      .withFailureHandler(function (err) {
+        boton.disabled = false;
+        errorDiv.textContent = 'Ocurrió un error: ' + err.message;
+        errorDiv.style.display = 'block';
+      })
+      .enviarComprobanteVenta(datos);
+  }
+
+  /* ---------- Form 4: Registrar gasto ---------- */
+
+  function mostrarFormGasto() {
+    ocultarTodo();
+    agregarBotonVolver();
+    document.getElementById('subtitulo').textContent = 'Registrar gasto';
+    document.getElementById('vistaFormGasto').style.display = 'block';
+
+    var select = document.getElementById('categoriaGasto');
+    select.innerHTML = CATEGORIAS_GASTO.map(function(c){ return '<option>'+c+'</option>'; }).join('');
+
+    ['montoGasto','obsGasto'].forEach(function(id){ document.getElementById(id).value = ''; });
+    document.getElementById('btnGuardarGasto').disabled = false;
+    document.getElementById('btnGuardarGasto').textContent = 'Guardar gasto';
+
+    cargarResumenGastos();
+  }
+
+  function cargarResumenGastos() {
+    google.script.run
+      .withSuccessHandler(pintarResumenGastos)
+      .withFailureHandler(function (err) {
+        document.getElementById('labelGastoMes').textContent = 'Error cargando datos';
+      })
+      .obtenerResumenGastosMes();
+  }
+
+  function pintarResumenGastos(resumen) {
+    document.getElementById('montoGastoMes').textContent = '$' + resumen.total;
+    document.getElementById('labelGastoMes').textContent = 'Gastos fijos mes de ' + resumen.mesNombre + ' · tocar para ver detalle';
+
+    var detalle = document.getElementById('detalleGastoMes');
+    detalle.innerHTML = resumen.detalle.length === 0
+      ? '<div class="vacio">Todavía no cargaste gastos este mes</div>'
+      : resumen.detalle.map(function(d){
+          return '<div><span>' + d.categoria + '</span><strong>$' + d.monto + '</strong></div>';
+        }).join('');
+  }
+
+  function guardarGasto() {
+    var errorDiv = document.getElementById('errorGasto');
+    errorDiv.style.display = 'none';
+
+    var monto = document.getElementById('montoGasto').value;
+    if (!monto) {
+      errorDiv.textContent = 'Ingresá el monto del gasto.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var datos = {
+      categoria: document.getElementById('categoriaGasto').value,
+      monto: monto,
+      observaciones: document.getElementById('obsGasto').value.trim()
+    };
+
+    var boton = document.getElementById('btnGuardarGasto');
+    boton.disabled = true;
+    boton.textContent = 'Guardando...';
+
+    google.script.run
+      .withSuccessHandler(function (resumen) {
+        boton.disabled = false;
+        boton.textContent = 'Guardar gasto';
+        ['montoGasto','obsGasto'].forEach(function(id){ document.getElementById(id).value = ''; });
+        pintarResumenGastos(resumen);
+        document.getElementById('consolidadoGasto').classList.add('abierto');
+      })
+      .withFailureHandler(function (err) {
+        boton.disabled = false;
+        boton.textContent = 'Guardar gasto';
+        errorDiv.textContent = 'Ocurrió un error: ' + err.message;
+        errorDiv.style.display = 'block';
+      })
+      .registrarGasto(datos);
+  }
+
+  /* ---------- Modal: Registrar compra ---------- */
+
+  function abrirModalCompra() {
+    document.getElementById('compraFormCampos').style.display = 'block';
+    document.getElementById('compraResultado').style.display = 'none';
+    document.getElementById('errorCompra').style.display = 'none';
+
+    document.getElementById('compraFecha').value = fechaLocalISO();
+    document.getElementById('compraProveedor').value = '';
+    document.getElementById('compraValor').value = '';
+    document.getElementById('compraTransporte').value = '';
+    document.getElementById('compraObs').value = '';
+    calcularInversionCompra();
+
+    document.getElementById('btnGuardarCompra').disabled = false;
+    document.getElementById('btnGuardarCompra').textContent = 'Guardar compra';
+
+    document.getElementById('modalCompra').classList.add('abierto');
+  }
+
+  function cerrarModalCompra() {
+    document.getElementById('modalCompra').classList.remove('abierto');
+  }
+
+  function calcularInversionCompra() {
+    var valor = parseInt(document.getElementById('compraValor').value.replace(/\D/g, "")) || 0;
+    var transporte = parseInt(document.getElementById('compraTransporte').value.replace(/\D/g, "")) || 0;
+    var total = valor + transporte;
+    document.getElementById('compraInversionTotal').textContent = '$' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  function guardarCompra() {
+    var errorDiv = document.getElementById('errorCompra');
+    errorDiv.style.display = 'none';
+
+    var fecha = document.getElementById('compraFecha').value;
+    var proveedor = document.getElementById('compraProveedor').value.trim();
+    var valorCompra = document.getElementById('compraValor').value;
+
+    if (!fecha || !proveedor || !valorCompra) {
+      errorDiv.textContent = 'Completá Fecha, Proveedor y Valor de la compra.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    var datos = {
+      fecha: fecha,
+      proveedor: proveedor,
+      valorCompra: valorCompra,
+      transporte: document.getElementById('compraTransporte').value,
+      observaciones: document.getElementById('compraObs').value.trim()
+    };
+
+    var boton = document.getElementById('btnGuardarCompra');
+    boton.disabled = true;
+    boton.textContent = 'Guardando...';
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        boton.disabled = false;
+        boton.textContent = 'Guardar compra';
+        document.getElementById('compraFormCampos').style.display = 'none';
+        document.getElementById('compraResultado').style.display = 'block';
+        document.getElementById('resumenCompra').innerHTML =
+          '<div><span>ID</span><strong>' + resultado.idCompra + '</strong></div>' +
+          '<div><span>Fecha</span><strong>' + resultado.fechaFormateada + '</strong></div>' +
+          '<div><span>Proveedor</span><strong>' + resultado.proveedor + '</strong></div>' +
+          '<div><span>Valor compra</span><strong>$' + resultado.valorCompra + '</strong></div>' +
+          '<div><span>Transporte</span><strong>$' + resultado.transporte + '</strong></div>' +
+          '<div><span>Inversión total</span><strong>$' + resultado.inversionTotal + '</strong></div>';
+      })
+      .withFailureHandler(function (err) {
+        boton.disabled = false;
+        boton.textContent = 'Guardar compra';
+        errorDiv.textContent = 'Ocurrió un error: ' + err.message;
+        errorDiv.style.display = 'block';
+      })
+      .registrarCompra(datos);
+  }
+
+  /* ---------- Form 5: Stock ---------- */
+
+  var stockCache = null;
+
+  function mostrarStock() {
+    ocultarTodo();
+    agregarBotonVolver();
+    document.getElementById('subtitulo').textContent = 'Stock';
+    document.getElementById('vistaStock').style.display = 'block';
+
+    document.getElementById('buscadorStock').value = '';
+    var selectCategoria = document.getElementById('categoriaStock');
+    selectCategoria.innerHTML = '<option value="">Todas las categorías</option>' +
+      TIPOS_PRENDA.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+
+    document.getElementById('listaStock').innerHTML = '<div class="loading">Cargando stock...</div>';
+    stockCache = null;
+
+    google.script.run
+      .withSuccessHandler(function (productos) {
+        stockCache = productos;
+        filtrarStock();
+      })
+      .withFailureHandler(function (err) {
+        document.getElementById('listaStock').innerHTML = '<div class="vacio">Error cargando el stock</div>';
+      })
+      .obtenerProductosStock();
+  }
+
+  function filtrarStock() {
+    if (!stockCache) return;
+
+    var texto = document.getElementById('buscadorStock').value.toLowerCase();
+    var categoria = document.getElementById('categoriaStock').value;
+
+    var resultado = stockCache.filter(function (p) {
+      var coincideTexto = !texto ||
+        p.descripcion.toLowerCase().indexOf(texto) !== -1 ||
+        p.marca.toLowerCase().indexOf(texto) !== -1 ||
+        p.color.toLowerCase().indexOf(texto) !== -1;
+      var coincideCategoria = !categoria || p.categoria === categoria;
+      return coincideTexto && coincideCategoria;
+    });
+
+    document.getElementById('contadorStock').textContent =
+      resultado.length + (resultado.length === 1 ? ' producto encontrado' : ' productos encontrados');
+
+    var lista = document.getElementById('listaStock');
+    if (resultado.length === 0) {
+      lista.innerHTML = '<div class="vacio">No se encontraron productos</div>';
+      return;
+    }
+
+    lista.innerHTML = resultado.map(function (p) {
+      var detalles = [p.marca, p.color, p.talle ? 'Talle ' + p.talle : ''].filter(Boolean).join(' · ');
+      var stockInfo = p.cantidad > 0
+        ? '<div class="cantidad-ok">' + p.cantidad + ' disponibles</div>'
+        : '<div class="sin-stock">Sin stock</div>';
+
+      return '<div class="producto-stock">' +
+        '<div>' +
+          '<div class="categoria-chip">' + p.categoria + '</div>' +
+          '<div class="descripcion">' + p.descripcion + '</div>' +
+          (detalles ? '<div class="detalles">' + detalles + '</div>' : '') +
+        '</div>' +
+        '<div class="der">' +
+          '<div class="precio-con">$' + p.precioConIva + '</div>' +
+          '<div class="precio-sin">sin IVA $' + p.precioSinIva + '</div>' +
+          stockInfo +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---------- Arranque ---------- */
+  mostrarMenu();
+</script>
