@@ -4,7 +4,7 @@ Aplicación web en desarrollo para ayudar a organizar las operaciones diarias de
 
 El proyecto busca centralizar tareas que suelen llevarse en planillas o de forma manual, como el registro de ventas, el seguimiento de créditos personales, los pagos de clientes, los gastos y el control de stock.
 
-> **Estado:** proyecto personal en desarrollo. Antes de usarlo con datos reales, es necesario completar las pruebas funcionales y revisar validaciones, permisos y manejo de errores.
+<img width="460" height="627" alt="Image" src="https://github.com/user-attachments/assets/fa2f8222-fe02-48a0-a906-831ca7650072" />
 
 ## Objetivo
 
