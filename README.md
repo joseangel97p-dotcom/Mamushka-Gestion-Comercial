@@ -2,6 +2,9 @@
 
 Desarrollé esta aplicación para ayudar con la gestión del negocio familiar de ropa y calzado. La idea surgió de una necesidad real: tener en un solo lugar la información de ventas, créditos, pagos, gastos y compras.
 
+<img width="447" height="624" alt="mamu" src="https://github.com/user-attachments/assets/81b4e7d5-4d8d-4e7d-b549-ba03acc8504d" />
+
+
 ## Funcionalidades
 
 - Registro de ventas y medios de pago.
@@ -27,3 +30,4 @@ Trabajé con Claude como asistente durante el proceso, revisando los resultados,
 ## Estado actual
 
 La aplicación está en uso y sigo trabajando en mejoras y correcciones a partir de las necesidades que aparecen.
+
