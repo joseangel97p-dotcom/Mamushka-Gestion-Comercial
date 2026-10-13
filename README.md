@@ -2,6 +2,11 @@
 
 Desarrollé esta aplicación para ayudar con la gestión del negocio familiar de ropa y calzado. La idea surgió de una necesidad real: tener en un solo lugar la información de ventas, créditos, pagos, gastos y compras.
 
+Te comparto la demo en donde la podes probar:
+
+https://script.google.com/macros/s/AKfycbzMXOUD2yF5qUf1sJFm60uJ3Wo94HOSx0rx76BGPWz7vWJtMYlYcxsV6adORPZW-GiH/exec
+
+
 <img width="447" height="624" alt="mamu" src="https://github.com/user-attachments/assets/81b4e7d5-4d8d-4e7d-b549-ba03acc8504d" />
 
 
