@@ -123,21 +123,6 @@
   }
   .check-linea span { font-size: 14px; color: #555; font-weight: 600; }
 
-  /* --- Stock --- */
-  .producto-stock {
-    background: #fff6f9; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
-    display: flex; justify-content: space-between; align-items: flex-start;
-  }
-  .producto-stock .categoria-chip { font-size: 11px; color: #e75480; font-weight: 700; text-transform: uppercase; }
-  .producto-stock .descripcion { font-size: 14px; color: #333; font-weight: 600; margin-top: 2px; }
-  .producto-stock .detalles { font-size: 12px; color: #999; margin-top: 3px; }
-  .producto-stock .der { text-align: right; margin-left: 10px; white-space: nowrap; }
-  .producto-stock .precio-con { font-size: 15px; font-weight: 700; color: #e75480; }
-  .producto-stock .precio-sin { font-size: 11px; color: #999; }
-  .producto-stock .cantidad-ok { font-size: 11px; color: #2ecc71; margin-top: 3px; font-weight: 600; }
-  .producto-stock .sin-stock { font-size: 11px; color: #e74c3c; margin-top: 3px; font-weight: 600; }
-  .contador-stock { font-size: 12px; color: #999; margin: 4px 0 10px; }
-
   /* --- Modal: Registrar compra --- */
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(45,20,30,0.45);
@@ -158,6 +143,79 @@
     color: #fff; font-size: 20px; line-height: 1; cursor: pointer; padding: 6px;
   }
   .modal-body { padding: 20px 22px 22px; }
+
+  .cliente-link { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .hint-click { font-size: 11px; color: #aaa; margin: 2px 0 8px; text-align: center; }
+  .link-total { display: inline-block; margin-top: 6px; font-size: 12px; color: #e75480; font-weight: 600; text-decoration: underline; }
+  .resumen strong.interes { color: #e74c3c; }
+
+  /* --- Historial --- */
+  .hist-hero {
+    background: linear-gradient(135deg, #fff6f9, #fde4ec); border-radius: 14px;
+    padding: 18px 14px; text-align: center; margin-bottom: 6px;
+  }
+  .hist-hero .h-label { font-size: 12px; color: #999; text-transform: capitalize; }
+  .hist-hero .h-monto { font-size: 32px; font-weight: 700; color: #e75480; margin: 2px 0; }
+  .hist-hero .h-sub { font-size: 11px; color: #aaa; }
+  .h-monto.neg, .mh-total.neg { color: #e74c3c; }
+  .h-monto.pos, .mh-total.pos { color: #27ae60; }
+
+  .res-grid { display: flex; gap: 6px; margin-top: 12px; }
+  .res-item { flex: 1; background: rgba(255,255,255,0.75); border-radius: 10px; padding: 8px 4px; text-align: center; }
+  .res-item .r-label { font-size: 11px; color: #999; }
+  .res-item .r-monto { font-size: 14px; font-weight: 700; margin-top: 2px; }
+  .res-item.entra .r-monto { color: #27ae60; }
+  .res-item.sale .r-monto { color: #e67e22; }
+  .mes-body .res-grid { margin: 10px 0 0; }
+  .mes-body .res-item { background: #fff6f9; }
+  .hist-hero .h-cred { font-size: 12px; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(231,84,128,0.15); }
+
+  .hist-dia {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 16px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #f3dce4;
+  }
+  .hist-dia .d-nombre { font-size: 14px; font-weight: 700; color: #555; }
+  .hist-dia .d-total { font-size: 12px; color: #27ae60; font-weight: 600; }
+  .hist-dia .d-total .d-sale { color: #e67e22; margin-left: 8px; }
+
+  .mov {
+    display: flex; gap: 10px; align-items: center; width: 100%;
+    padding: 10px 12px; margin-bottom: 7px; border-radius: 10px;
+    background: #fff; border: 1px solid #f3e4ea; border-left-width: 4px;
+  }
+  .mov.venta   { border-left-color: #2ecc71; }
+  .mov.pago    { border-left-color: #3498db; }
+  .mov.credito { border-left-color: #e75480; }
+  .mov.gasto   { border-left-color: #e67e22; }
+  .mov.compra  { border-left-color: #9b59b6; }
+  .mov .m-icono { font-size: 20px; flex-shrink: 0; }
+  .mov .m-centro { flex: 1; min-width: 0; }
+  .mov .m-titulo { font-size: 14px; font-weight: 600; color: #333; word-break: break-word; }
+  .mov .m-sub { font-size: 12px; color: #999; margin-top: 2px; word-break: break-word; }
+  .mov .m-der { text-align: right; white-space: nowrap; flex-shrink: 0; }
+  .mov .m-monto { font-size: 15px; font-weight: 700; color: #27ae60; }
+  .mov .m-monto.rosa { color: #e75480; }
+  .mov .m-monto.sale { color: #e67e22; }
+  .mov .m-mini { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .mov .m-chip {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+    background: #f6eef1; color: #a05; margin-top: 4px;
+  }
+
+  .hist-titulo-sec { font-size: 12px; color: #aaa; font-weight: 600; margin: 22px 0 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .mes-bloque { border: 1px solid #f3dce4; border-radius: 12px; margin-top: 8px; overflow: hidden; }
+  .mes-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 14px; background: #fff6f9; cursor: pointer; user-select: none;
+  }
+  .mes-head .mh-nombre { font-size: 14px; font-weight: 700; color: #555; text-transform: capitalize; }
+  .mes-head .mh-der { display: flex; align-items: center; gap: 8px; }
+  .mes-head .mh-total { font-size: 14px; font-weight: 700; color: #27ae60; }
+  .mes-head .mh-flecha { color: #e75480; font-size: 12px; transition: transform .2s; }
+  .mes-bloque.abierto .mh-flecha { transform: rotate(180deg); }
+  .mes-body { display: none; padding: 0 10px 10px; }
+  .mes-bloque.abierto .mes-body { display: block; }
+
 </style>
 
 <div class="card">
@@ -192,7 +250,7 @@
       <button class="btn" onclick="mostrarForm3()">🛍️ Registrar ingreso</button>
       <button class="btn-secundario" onclick="mostrarFormGasto()">💸 Registrar gasto</button>
       <button class="btn-secundario" onclick="abrirModalCompra()">🧾 Registrar compra</button>
-      <button class="btn-secundario" onclick="mostrarStock()">📦 Stock</button>
+      <button class="btn-secundario" onclick="mostrarHistorial()">📒 Historial</button>
     </div>
 
     <!-- ================= FORM 3: CARGAR VENTA / REGISTRAR INGRESO ================= -->
@@ -213,8 +271,12 @@
 
           <div class="resumen" id="saldoCliente" style="display:none; margin-top:12px;"></div>
 
+          <label>Fecha de pago</label>
+          <input id="fechaPago" type="date" onchange="actualizarDesglosePago()">
+
           <label>Monto que paga ahora ($)</label>
-          <input id="montoPagado" type="text" inputmode="numeric" oninput="formatearInput(this)">
+          <input id="montoPagado" type="text" inputmode="decimal" onfocus="this.select()" oninput="formatearInput(this); montoPagoEditado = true;">
+          <a href="#" class="link-total" onclick="pagarTotal(); return false;">Pagar el total</a>
 
           <label>Método de pago</label>
           <select id="metodoPago" onchange="cambiarMetodoPagoForm2()">
@@ -280,7 +342,7 @@
           <input id="ventaCredCelular" type="tel" placeholder="Ej: 11 1234 5678">
 
           <label>Monto entrega ($)</label>
-          <input id="ventaCredEntrega" type="text" inputmode="numeric" oninput="formatearInput(this)">
+          <input id="ventaCredEntrega" type="text" inputmode="decimal" oninput="formatearInput(this)">
 
           <label>Método de pago de la entrega</label>
           <select id="ventaCredMetodoEntrega" onchange="cambiarMetodoPagoEntregaCredito()">
@@ -348,7 +410,7 @@
       <select id="categoriaGasto"></select>
 
       <label>Monto ($)</label>
-      <input id="montoGasto" type="text" inputmode="numeric" oninput="formatearInput(this)">
+      <input id="montoGasto" type="text" inputmode="decimal" oninput="formatearInput(this)">
 
       <label>Observaciones <span class="opcional">(opcional)</span></label>
       <input id="obsGasto" type="text" placeholder="Ej: Incluye luz y agua">
@@ -357,13 +419,18 @@
       <div class="error" id="errorGasto"></div>
     </div>
 
-    <!-- ================= FORM 5: STOCK (solo consulta) ================= -->
-    <div id="vistaStock" style="display:none;">
-      <input type="text" id="buscadorStock" placeholder="Buscar por descripción, marca o color..." oninput="filtrarStock()">
-      <select id="categoriaStock" onchange="filtrarStock()"></select>
+    <!-- ================= HISTORIAL DE MOVIMIENTOS ================= -->
+    <div id="vistaHistorial" style="display:none;">
+      <div class="hist-hero">
+        <div class="h-label" id="histLabel">Ganancia</div>
+        <div class="h-monto" id="histMonto">$0</div>
+        <div class="h-sub">lo que entró − gastos fijos − compras</div>
+        <div id="histResumen"></div>
+        <div class="h-cred" id="histCred" style="display:none;"></div>
+      </div>
 
-      <div class="contador-stock" id="contadorStock"></div>
-      <div id="listaStock"><div class="loading">Cargando stock...</div></div>
+      <div id="histMesActual"><div class="loading">Cargando movimientos...</div></div>
+      <div id="histAnteriores"></div>
     </div>
 
   </div>
@@ -386,10 +453,10 @@
         <input id="compraProveedor" type="text" placeholder="Ej: Mayorista Córdoba">
 
         <label>Valor de la compra ($)</label>
-        <input id="compraValor" type="text" inputmode="numeric" oninput="formatearInput(this); calcularInversionCompra();">
+        <input id="compraValor" type="text" inputmode="decimal" oninput="formatearInput(this); calcularInversionCompra();">
 
         <label>Transporte ($) <span class="opcional">(opcional)</span></label>
-        <input id="compraTransporte" type="text" inputmode="numeric" oninput="formatearInput(this); calcularInversionCompra();">
+        <input id="compraTransporte" type="text" inputmode="decimal" oninput="formatearInput(this); calcularInversionCompra();">
 
         <div class="total-venta">
           <span>Inversión total</span>
@@ -419,12 +486,14 @@
   var TIPOS_PRENDA = ["Jean","Remera","Campera","Buzo/Sweater","Vestido","Pantalón","Camisa","Tapado/Blazer","Calzado","Lencería","Pijama","Packs","Pantuflas","Chaleco","Corpiño","Body","Top","Pollera/Falda","Accesorios","Otro"];
   var CATEGORIAS_GASTO = ["🏠 Alquiler","💡 Luz","🔥 Gas","📋 Monotributo","📄 Habilitación","🌐 Internet","🧑‍💼 Ayudante","🧮 Contador","🔧 Otros"];
   var clientesConSaldoCache = [];
+  var montoPagoEditado = false;          // true si la persona tocó el monto a mano
+  var idCreditoPreseleccionado = null;   // crédito elegido desde el menú
   var ventaFilaIndex = null;
 
   /* ---------- Navegación entre vistas ---------- */
 
   function ocultarTodo() {
-    ['vistaMenu','vistaForm3','vistaFormGasto','vistaStock'].forEach(function(id){
+    ['vistaMenu','vistaForm3','vistaFormGasto','vistaHistorial'].forEach(function(id){
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('volverBtn') && document.getElementById('volverBtn').remove();
@@ -451,9 +520,37 @@
     document.getElementById(id).classList.toggle('abierto');
   }
 
+  /**
+   * Campo de monto con formato argentino y MÁXIMO 2 decimales:
+   * "." separa miles (se agrega solo) y "," separa decimales.
+   * Si se escribe un "." al final (teclados que no tienen coma),
+   * se toma como separador decimal.
+   */
   function formatearInput(input) {
-    var soloNumeros = input.value.replace(/\D/g, "");
-    input.value = soloNumeros.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    var crudo = input.value;
+    var puntoFinal = /\d\.$/.test(crudo) && crudo.indexOf(',') === -1;
+    if (puntoFinal) crudo = crudo.slice(0, -1) + ',';
+
+    var partes = crudo.replace(/[^\d,]/g, '').split(',');
+    var entero = partes[0].replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    var resultado = entero;
+    if (partes.length > 1) resultado += ',' + partes.slice(1).join('').slice(0, 2);
+    input.value = resultado;
+  }
+
+  // "1.250,50" -> 1250.5
+  function parsearMontoFront(valor) {
+    var n = parseFloat(String(valor || '').replace(/\./g, '').replace(',', '.'));
+    return isNaN(n) ? 0 : n;
+  }
+
+  // 1250.5 -> "1.250,50" (sin decimales si es entero; máximo 2)
+  function formatearMontoFront(numero) {
+    var n = Math.round((Number(numero) || 0) * 100) / 100;
+    var negativo = n < 0;
+    var partes = Math.abs(n).toFixed(2).split('.');
+    var entero = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (negativo ? '-' : '') + entero + (partes[1] === '00' ? '' : ',' + partes[1]);
   }
 
   // Devuelve la fecha de HOY en horario local como "YYYY-MM-DD".
@@ -508,9 +605,10 @@
           lista.innerHTML = '<div class="vacio">No hay créditos pendientes 🎉</div>';
           return;
         }
-        lista.innerHTML = datos.clientes.map(function (c) {
+        lista.innerHTML = '<div class="hint-click">Tocá un nombre para registrar su pago</div>' + datos.clientes.map(function (c) {
           return '<div class="cliente-item ' + c.color + '">' +
-                   '<span class="cliente-nombre"><span class="punto"></span>' + c.nombreCompleto + '</span>' +
+                   '<span class="cliente-nombre"><span class="punto"></span>' +
+                     '<a href="#" class="cliente-link" onclick="event.stopPropagation(); irAPagarCredito(\'' + escHist(c.idCredito) + '\'); return false;">' + escHist(c.nombreCompleto) + '</a></span>' +
                    '<span class="cliente-datos"><div class="saldo">$' + c.saldo + '</div><div class="vence">vence ' + c.fechaVencimiento + (c.vencido ? ' ⚠️' : '') + '</div></span>' +
                  '</div>';
         }).join('');
@@ -535,6 +633,12 @@
       document.getElementById('btnRegistrarPago').textContent = 'Registrar pago';
       document.getElementById('saldoCliente').style.display = 'none';
     }
+
+    var hoyISO = fechaLocalISO();
+    var inputFecha = document.getElementById('fechaPago');
+    inputFecha.value = hoyISO;
+    inputFecha.max = hoyISO;       // no se puede cargar un pago a futuro
+    montoPagoEditado = false;
 
     document.getElementById('metodoPago').value = 'Efectivo';
     document.getElementById('pagoCuotas').value = '';
@@ -580,8 +684,20 @@
         }
         select.innerHTML = '<option value="">Seleccioná un cliente...</option>' +
           clientes.map(function (c, i) {
-            return '<option value="' + i + '">' + c.nombreCompleto + ' — $' + c.saldoMostrar + (c.vencido ? ' ⚠️ vencido' : '') + '</option>';
+            return '<option value="' + i + '">' + escHist(c.nombreCompleto) + ' — $' + c.saldoMostrar + (c.vencido ? ' ⚠️ vencido' : '') + '</option>';
           }).join('');
+
+        // Si se llegó desde el menú tocando un nombre, dejar ese crédito elegido.
+        if (idCreditoPreseleccionado) {
+          for (var k = 0; k < clientes.length; k++) {
+            if (clientes[k].idCredito === idCreditoPreseleccionado) {
+              select.value = String(k);
+              mostrarSaldoSeleccionado();
+              break;
+            }
+          }
+          idCreditoPreseleccionado = null;
+        }
       })
       .withFailureHandler(function (err) {
         select.innerHTML = '<option value="">Error cargando clientes</option>';
@@ -589,7 +705,23 @@
       .obtenerClientesConSaldo();
   }
 
+  // Abre "Registrar ingreso" en modo pago con el crédito ya elegido
+  // (se usa al tocar un nombre en el listado de créditos del menú).
+  function irAPagarCredito(idCredito) {
+    idCreditoPreseleccionado = idCredito;
+    mostrarForm3();
+    document.getElementById('chkPagoCredito').checked = true;
+    toggleModoIngreso();
+  }
+
   function mostrarSaldoSeleccionado() {
+    montoPagoEditado = false;
+    actualizarDesglosePago();
+  }
+
+  // Muestra valor base + interés + total para el cliente y la fecha de pago
+  // elegidos, y completa el monto con el total (salvo que ya lo hayan editado).
+  function actualizarDesglosePago() {
     var indice = document.getElementById('selectCliente').value;
     var saldoDiv = document.getElementById('saldoCliente');
 
@@ -599,10 +731,26 @@
     }
 
     var cliente = clientesConSaldoCache[indice];
+    var fecha = document.getElementById('fechaPago').value || fechaLocalISO();
+    var vencidoEnFecha = fecha > cliente.vencimiento;
+    var interes = (cliente.ajuste === 'No' && vencidoEnFecha) ? Math.round(cliente.saldoBase * 10) / 100 : 0;
+    var total = Math.round((cliente.saldoBase + interes) * 100) / 100;
+
     saldoDiv.style.display = 'block';
     saldoDiv.innerHTML =
-      '<div><span>Saldo actual</span><strong>$' + cliente.saldoMostrar + '</strong></div>' +
-      (cliente.vencido ? '<div><span>Estado</span><strong style="color:#e74c3c;">Vencido (recargo incluido)</strong></div>' : '');
+      '<div><span>Valor base</span><strong>$' + formatearMontoFront(cliente.saldoBase) + '</strong></div>' +
+      (interes > 0 ? '<div><span>Interés (10% por vencido)</span><strong class="interes">+$' + formatearMontoFront(interes) + '</strong></div>' : '') +
+      '<div><span>Total a pagar</span><strong>$' + formatearMontoFront(total) + '</strong></div>' +
+      (vencidoEnFecha ? '<div><span>Estado</span><strong style="color:#e74c3c;">Vencido' + (interes > 0 ? '' : ' (recargo ya aplicado)') + '</strong></div>' : '');
+
+    if (!montoPagoEditado) {
+      document.getElementById('montoPagado').value = formatearMontoFront(total);
+    }
+  }
+
+  function pagarTotal() {
+    montoPagoEditado = false;
+    actualizarDesglosePago();
   }
 
   function registrarPago() {
@@ -623,9 +771,22 @@
       return;
     }
 
+    var fechaPago = document.getElementById('fechaPago').value;
+    if (!fechaPago) {
+      errorDiv.textContent = 'Elegí la fecha de pago.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+    if (fechaPago > fechaLocalISO()) {
+      errorDiv.textContent = 'La fecha de pago no puede ser futura.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
     var cliente = clientesConSaldoCache[indice];
     var datos = {
       idCredito: cliente.idCredito,
+      fechaPago: fechaPago,
       montoPagado: montoPagado,
       metodoPago: document.getElementById('metodoPago').value,
       cuotas: document.getElementById('pagoCuotas').value,
@@ -642,7 +803,12 @@
         document.getElementById('resultadoForm2').style.display = 'block';
         document.getElementById('linkWhatsAppForm2').href = resultado.urlWhatsApp;
         document.getElementById('resumenForm2').innerHTML =
-          '<div><span>Cliente</span><strong>' + resultado.nombre + '</strong></div>' +
+          '<div><span>Cliente</span><strong>' + escHist(resultado.nombre) + '</strong></div>' +
+          '<div><span>Fecha de pago</span><strong>' + resultado.fechaPago + '</strong></div>' +
+          '<div><span>Valor base</span><strong>$' + resultado.valorBase + '</strong></div>' +
+          (resultado.hayInteres ? '<div><span>Interés (10%)</span><strong class="interes">+$' + resultado.interes + '</strong></div>' : '') +
+          '<div><span>Total adeudado</span><strong>$' + resultado.totalAdeudado + '</strong></div>' +
+          '<div><span>Pagó</span><strong>$' + resultado.montoPagado + '</strong></div>' +
           '<div><span>Estado</span><strong>' + resultado.estado + '</strong></div>' +
           '<div><span>Saldo restante</span><strong>$' + resultado.saldoRestante + '</strong></div>';
       })
@@ -713,8 +879,6 @@
 
   function agregarBloquePrendaVenta() {
     var container = document.getElementById('prendasVentaContainer');
-    if (container.children.length >= 4) return;
-
     contadorPrendasVenta++;
     var id = 'v' + contadorPrendasVenta;
     var esPrimera = container.children.length === 0;
@@ -730,26 +894,24 @@
       '<label>Descripción <span class="opcional">(opcional)</span></label>' +
       '<input type="text" id="descripcion-' + id + '" placeholder="Ej: azul talle 40">' +
       '<label>Precio ($)</label>' +
-      '<input type="text" id="precio-' + id + '" inputmode="numeric" oninput="formatearInput(this); calcularTotalVenta();">';
+      '<input type="text" id="precio-' + id + '" inputmode="decimal" oninput="formatearInput(this); calcularTotalVenta();">';
 
     container.appendChild(div);
-    if (container.children.length >= 4) document.getElementById('btnAgregarPrendaVenta').style.display = 'none';
     calcularTotalVenta();
   }
 
   function quitarBloquePrendaVenta(id) {
     var el = document.getElementById('prenda-' + id);
     if (el) el.remove();
-    document.getElementById('btnAgregarPrendaVenta').style.display = 'block';
     calcularTotalVenta();
   }
 
   function calcularTotalVenta() {
     var total = 0;
     document.querySelectorAll('#prendasVentaContainer input[id^="precio-"]').forEach(function (input) {
-      total += parseInt(input.value.replace(/\D/g, "")) || 0;
+      total += parsearMontoFront(input.value);
     });
-    document.getElementById('totalVentaMonto').textContent = '$' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    document.getElementById('totalVentaMonto').textContent = '$' + formatearMontoFront(total);
   }
 
   function recolectarPrendasVenta() {
@@ -1001,10 +1163,9 @@
   }
 
   function calcularInversionCompra() {
-    var valor = parseInt(document.getElementById('compraValor').value.replace(/\D/g, "")) || 0;
-    var transporte = parseInt(document.getElementById('compraTransporte').value.replace(/\D/g, "")) || 0;
-    var total = valor + transporte;
-    document.getElementById('compraInversionTotal').textContent = '$' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    var valor = parsearMontoFront(document.getElementById('compraValor').value);
+    var transporte = parsearMontoFront(document.getElementById('compraTransporte').value);
+    document.getElementById('compraInversionTotal').textContent = '$' + formatearMontoFront(valor + transporte);
   }
 
   function guardarCompra() {
@@ -1056,78 +1217,124 @@
       .registrarCompra(datos);
   }
 
-  /* ---------- Form 5: Stock ---------- */
+  /* ---------- Historial de movimientos ---------- */
 
-  var stockCache = null;
-
-  function mostrarStock() {
-    ocultarTodo();
-    agregarBotonVolver();
-    document.getElementById('subtitulo').textContent = 'Stock';
-    document.getElementById('vistaStock').style.display = 'block';
-
-    document.getElementById('buscadorStock').value = '';
-    var selectCategoria = document.getElementById('categoriaStock');
-    selectCategoria.innerHTML = '<option value="">Todas las categorías</option>' +
-      TIPOS_PRENDA.map(function(t){ return '<option>'+t+'</option>'; }).join('');
-
-    document.getElementById('listaStock').innerHTML = '<div class="loading">Cargando stock...</div>';
-    stockCache = null;
-
-    google.script.run
-      .withSuccessHandler(function (productos) {
-        stockCache = productos;
-        filtrarStock();
-      })
-      .withFailureHandler(function (err) {
-        document.getElementById('listaStock').innerHTML = '<div class="vacio">Error cargando el stock</div>';
-      })
-      .obtenerProductosStock();
+  function escHist(t) {
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function filtrarStock() {
-    if (!stockCache) return;
+  function mostrarHistorial() {
+    ocultarTodo();
+    agregarBotonVolver();
+    document.getElementById('subtitulo').textContent = 'Historial';
+    document.getElementById('vistaHistorial').style.display = 'block';
+    cargarHistorial();
+  }
 
-    var texto = document.getElementById('buscadorStock').value.toLowerCase();
-    var categoria = document.getElementById('categoriaStock').value;
+  function cargarHistorial() {
+    document.getElementById('histMesActual').innerHTML = '<div class="loading">Cargando movimientos...</div>';
+    document.getElementById('histAnteriores').innerHTML = '';
+    google.script.run
+      .withSuccessHandler(pintarHistorial)
+      .withFailureHandler(function () {
+        document.getElementById('histMesActual').innerHTML = '<div class="vacio">No se pudo cargar el historial. Probá de nuevo.</div>';
+      })
+      .obtenerHistorial();
+  }
 
-    var resultado = stockCache.filter(function (p) {
-      var coincideTexto = !texto ||
-        p.descripcion.toLowerCase().indexOf(texto) !== -1 ||
-        p.marca.toLowerCase().indexOf(texto) !== -1 ||
-        p.color.toLowerCase().indexOf(texto) !== -1;
-      var coincideCategoria = !categoria || p.categoria === categoria;
-      return coincideTexto && coincideCategoria;
-    });
+  // Texto del monto con signo: "$1.000" o "-$1.000"
+  function montoNeto(m) { return (m.gananciaNegativa ? '-' : '') + '$' + m.ganancia; }
 
-    document.getElementById('contadorStock').textContent =
-      resultado.length + (resultado.length === 1 ? ' producto encontrado' : ' productos encontrados');
+  function pintarResumen(m) {
+    return '<div class="res-grid">' +
+      '<div class="res-item entra"><div class="r-label">Entró</div><div class="r-monto">$' + escHist(m.entro) + '</div></div>' +
+      '<div class="res-item sale"><div class="r-label">Gastos fijos</div><div class="r-monto">-$' + escHist(m.gastos) + '</div></div>' +
+      '<div class="res-item sale"><div class="r-label">Compras</div><div class="r-monto">-$' + escHist(m.compras) + '</div></div>' +
+    '</div>';
+  }
 
-    var lista = document.getElementById('listaStock');
-    if (resultado.length === 0) {
-      lista.innerHTML = '<div class="vacio">No se encontraron productos</div>';
-      return;
+  function pintarDias(dias) {
+    return dias.map(function (d) {
+      return '<div class="hist-dia"><span class="d-nombre">' + escHist(d.etiqueta) + '</span>' +
+             '<span class="d-total">Entró $' + escHist(d.ingresos) +
+             (d.hayEgresos ? '<span class="d-sale">Salió $' + escHist(d.egresos) + '</span>' : '') +
+             '</span></div>' +
+             d.movs.map(pintarMovimiento).join('');
+    }).join('');
+  }
+
+  function pintarHistorial(h) {
+    var a = h.actual;
+    document.getElementById('histLabel').textContent = 'Ganancia de ' + a.nombre;
+    var monto = document.getElementById('histMonto');
+    monto.textContent = montoNeto(a);
+    monto.className = 'h-monto ' + (a.gananciaNegativa ? 'neg' : 'pos');
+    document.getElementById('histResumen').innerHTML = pintarResumen(a);
+
+    var cred = document.getElementById('histCred');
+    if (a.cantCreditos > 0) {
+      cred.style.display = 'block';
+      cred.textContent = a.cantCreditos + (a.cantCreditos === 1 ? ' crédito otorgado' : ' créditos otorgados') + ' · $' + a.creditos + ' a cobrar (no incluido arriba)';
+    } else {
+      cred.style.display = 'none';
     }
 
-    lista.innerHTML = resultado.map(function (p) {
-      var detalles = [p.marca, p.color, p.talle ? 'Talle ' + p.talle : ''].filter(Boolean).join(' · ');
-      var stockInfo = p.cantidad > 0
-        ? '<div class="cantidad-ok">' + p.cantidad + ' disponibles</div>'
-        : '<div class="sin-stock">Sin stock</div>';
+    document.getElementById('histMesActual').innerHTML = a.dias.length === 0
+      ? '<div class="vacio">Todavía no hay movimientos este mes.</div>'
+      : pintarDias(a.dias);
 
-      return '<div class="producto-stock">' +
-        '<div>' +
-          '<div class="categoria-chip">' + p.categoria + '</div>' +
-          '<div class="descripcion">' + p.descripcion + '</div>' +
-          (detalles ? '<div class="detalles">' + detalles + '</div>' : '') +
+    var ant = document.getElementById('histAnteriores');
+    if (h.anteriores.length === 0) { ant.innerHTML = ''; return; }
+
+    ant.innerHTML = '<div class="hist-titulo-sec">Meses anteriores</div>' +
+      h.anteriores.map(function (m) {
+        return '<div class="mes-bloque">' +
+          '<div class="mes-head" onclick="this.parentNode.classList.toggle(\'abierto\')">' +
+            '<span class="mh-nombre">' + escHist(m.nombre) + ' ' + escHist(m.anio) + '</span>' +
+            '<span class="mh-der"><span class="mh-total ' + (m.gananciaNegativa ? 'neg' : 'pos') + '">' + montoNeto(m) + '</span><span class="mh-flecha">▼</span></span>' +
+          '</div>' +
+          '<div class="mes-body">' + pintarResumen(m) + pintarDias(m.dias) + '</div>' +
+        '</div>';
+      }).join('');
+  }
+
+  function pintarMovimiento(m) {
+    if (m.tipo === 'credito') {
+      return '<div class="mov credito">' +
+        '<div class="m-icono">🧾</div>' +
+        '<div class="m-centro">' +
+          '<div class="m-titulo">' + escHist(m.titulo) + '</div>' +
+          (m.detalle ? '<div class="m-sub">' + escHist(m.detalle) + '</div>' : '') +
+          '<div class="m-chip">Crédito · vence ' + escHist(m.vence) + '</div>' +
         '</div>' +
-        '<div class="der">' +
-          '<div class="precio-con">$' + p.precioConIva + '</div>' +
-          '<div class="precio-sin">sin IVA $' + p.precioSinIva + '</div>' +
-          stockInfo +
+        '<div class="m-der">' +
+          '<div class="m-monto rosa">Saldo $' + escHist(m.saldo) + '</div>' +
+          '<div class="m-mini">Seña $' + escHist(m.entrega) + '</div>' +
         '</div>' +
       '</div>';
-    }).join('');
+    }
+    if (m.tipo === 'gasto' || m.tipo === 'compra') {
+      return '<div class="mov ' + escHist(m.tipo) + '">' +
+        '<div class="m-icono">' + (m.tipo === 'gasto' ? '🏷️' : '📦') + '</div>' +
+        '<div class="m-centro">' +
+          '<div class="m-titulo">' + escHist(m.titulo) + '</div>' +
+          (m.detalle ? '<div class="m-sub">' + escHist(m.detalle) + '</div>' : '') +
+          '<div class="m-chip">' + (m.tipo === 'gasto' ? 'Gasto fijo' : 'Compra de mercadería') + '</div>' +
+        '</div>' +
+        '<div class="m-der"><div class="m-monto sale">-$' + escHist(m.monto) + '</div></div>' +
+      '</div>';
+    }
+    var icono = m.tipo === 'pago' ? '💵' : '🛍️';
+    return '<div class="mov ' + escHist(m.tipo) + '">' +
+      '<div class="m-icono">' + icono + '</div>' +
+      '<div class="m-centro">' +
+        '<div class="m-titulo">' + escHist(m.titulo) + '</div>' +
+        (m.detalle ? '<div class="m-sub">' + escHist(m.detalle) + '</div>' : '') +
+        (m.metodo ? '<div class="m-chip">' + escHist(m.metodo) + '</div>' : '') +
+      '</div>' +
+      '<div class="m-der"><div class="m-monto">+$' + escHist(m.monto) + '</div></div>' +
+    '</div>';
   }
 
   /* ---------- Arranque ---------- */

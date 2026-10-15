@@ -12,9 +12,15 @@
  *     sin guardar nada
  *   - Registrar gasto: solo gastos FIJOS del negocio, con
  *     consolidado del mes actual clickeable
+ *   - Registrar compra: control de inversión en mercadería
+ *   - Historial: libro diario de movimientos (ver Historial.gs)
  *
  *  Hojas (se crean solas):
- *   - "Creditos", "Clientes", "Ventas", "Gastos"
+ *   - "Creditos", "Clientes", "Ventas", "Gastos", "Pagos", "Compras"
+ *
+ *  NOTA: el módulo Stock fue retirado por el momento. Si tu planilla
+ *  todavía tiene una hoja "Stock", no se borra ni se modifica: el
+ *  sistema simplemente ya no la usa.
  *
  *  REGLA DE RECARGO / EXTENSIÓN EN CRÉDITOS (sin cambios):
  *   Un solo ajuste por crédito: o 7 días de gracia sin recargo
@@ -28,7 +34,6 @@ var NOMBRE_HOJA_CLIENTES = "Clientes";
 var NOMBRE_HOJA_VENTAS = "Ventas";
 var NOMBRE_HOJA_GASTOS = "Gastos";
 var NOMBRE_HOJA_PAGOS = "Pagos";
-var NOMBRE_HOJA_STOCK = "Stock";
 var NOMBRE_HOJA_COMPRAS = "Compras";
 var ALIAS_TRANSFERENCIA = "Mamushka.10";
 
@@ -46,7 +51,10 @@ var COL = {
   PRENDA1: 5, PRENDA2: 6, PRENDA3: 7,
   PRECIO_TOTAL: 8, ENTREGA: 9, SALDO: 10, VENCIMIENTO: 11,
   AJUSTE: 12, ESTADO: 13, FECHA_PAGO_TOTAL: 14, METODO_PAGO: 15, LINK: 16,
-  PRENDA4: 17, PRENDA5: 18, CUOTAS: 19, TARJETA: 20, ID_CREDITO: 21
+  PRENDA4: 17, PRENDA5: 18, CUOTAS: 19, TARJETA: 20, ID_CREDITO: 21,
+  // Prendas 6 en adelante (texto, separadas por " | "). Las primeras 5
+  // siguen en sus columnas de siempre; esto evita el límite de columnas.
+  EXTRAS: 22
 };
 
 // Columnas de Ventas (1-indexed)
@@ -56,7 +64,10 @@ var COL_VENTA = {
   TIPO2: 8, DESC2: 9, PRECIO2: 10,
   TIPO3: 11, DESC3: 12, PRECIO3: 13,
   TIPO4: 14, DESC4: 15, PRECIO4: 16,
-  TOTAL: 17, METODO_PAGO: 18, LINK: 19, CUOTAS: 20, TARJETA: 21
+  TOTAL: 17, METODO_PAGO: 18, LINK: 19, CUOTAS: 20, TARJETA: 21,
+  // Prendas 5 en adelante (texto, separadas por " | "): detalle y precio.
+  // Las primeras 4 siguen en sus columnas de siempre.
+  EXTRAS: 22
 };
 
 // Columnas de Gastos (1-indexed)
@@ -65,16 +76,9 @@ var COL_GASTO = { FECHA: 1, CATEGORIA: 2, MONTO: 3, OBSERVACIONES: 4 };
 // Columnas de Pagos (1-indexed) — registro de dinero que entra: entregas de crédito y pagos
 var COL_PAGO = { FECHA: 1, CLIENTE: 2, TIPO: 3, MONTO: 4, METODO: 5, CUOTAS: 6, TARJETA: 7 };
 
-// Columnas de Stock (1-indexed)
-var COL_STOCK = {
-  ID: 1, FECHA_INGRESO: 2, PROVEEDOR: 3, CATEGORIA: 4, DESCRIPCION: 5,
-  MARCA: 6, COLOR: 7, TALLE: 8, PRECIO_COSTO: 9, PRECIO_CON_IVA: 10,
-  PRECIO_SIN_IVA: 11, CANTIDAD: 12, TEMPORADA: 13, OBSERVACIONES: 14
-};
-
 // Columnas de Compras (1-indexed) — registro histórico de mercadería
-// comprada. NO toca la hoja Stock ni calcula ganancias: es solo control
-// de cuánto dinero se invirtió (valor de la compra + transporte).
+// comprada. No calcula ganancias: es solo control de cuánto dinero
+// se invirtió (valor de la compra + transporte).
 var COL_COMPRA = {
   ID: 1, FECHA: 2, PROVEEDOR: 3, VALOR: 4, TRANSPORTE: 5,
   INVERSION_TOTAL: 6, OBSERVACIONES: 7
@@ -88,10 +92,9 @@ function doGet(e) {
 }
 
 /**
- * Se asegura de que las 7 hojas del sistema existan (con sus encabezados)
+ * Se asegura de que las 6 hojas del sistema existan (con sus encabezados)
  * apenas se abre la app o la planilla, en vez de crearse recién la primera
- * vez que se usa cada sección. Así "Stock" (o cualquier otra) siempre está
- * disponible para pegar datos aunque todavía no hayas entrado a esa sección.
+ * vez que se usa cada sección.
  * También migra cualquier crédito viejo que todavía no tenga ID único.
  */
 function asegurarTodasLasHojas() {
@@ -100,7 +103,6 @@ function asegurarTodasLasHojas() {
   obtenerHojaVentas();
   obtenerHojaGastos();
   obtenerHojaPagos();
-  obtenerHojaStock();
   obtenerHojaCompras();
   asegurarIdsCreditos();
 }
@@ -138,11 +140,11 @@ function obtenerDatosMenu() {
     var saldo = Number(fila[COL.SALDO - 1]) || 0;
     var vencimiento = new Date(fila[COL.VENCIMIENTO - 1]);
     var ajuste = fila[COL.AJUSTE - 1];
-    var vencido = hoy > vencimiento;
+    var vencido = estaVencido(vencimiento, hoy);
 
     var saldoMostrar = saldo;
     if (vencido && ajuste === "No") {
-      saldoMostrar = saldo * 1.10;
+      saldoMostrar = redondear2(saldo * 1.10);
     }
 
     var color = "verde";
@@ -152,9 +154,10 @@ function obtenerDatosMenu() {
 
     total += saldoMostrar;
 
-    var prendas = [fila[COL.PRENDA1 - 1], fila[COL.PRENDA2 - 1], fila[COL.PRENDA3 - 1], fila[COL.PRENDA4 - 1], fila[COL.PRENDA5 - 1]].filter(Boolean);
+    var prendas = prendasDeCredito(fila);
 
     clientes.push({
+      idCredito: fila[COL.ID_CREDITO - 1],
       nombreCompleto: fila[COL.NOMBRE - 1] + " " + fila[COL.APELLIDO - 1],
       saldo: formatearMoneda(saldoMostrar),
       color: color,
@@ -234,7 +237,7 @@ function sumarPeriodo(hoja, origen, soloHoy) {
       monto = Number(fila[COL_VENTA.TOTAL - 1]) || 0;
       var nombre = (fila[COL_VENTA.NOMBRE - 1] + " " + fila[COL_VENTA.APELLIDO - 1]).trim();
       cliente = nombre || "Sin nombre";
-      var tipos = [fila[COL_VENTA.TIPO1 - 1], fila[COL_VENTA.TIPO2 - 1], fila[COL_VENTA.TIPO3 - 1], fila[COL_VENTA.TIPO4 - 1]].filter(Boolean);
+      var tipos = tiposDeVenta(fila);
       descripcion = tipos.join(", ") || "Venta";
     } else {
       fecha = new Date(fila[COL_PAGO.FECHA - 1]);
@@ -282,6 +285,7 @@ function guardarVentaCreditoPersonal(datos) {
 
   var total = 0;
   for (var i = 0; i < prendas.length; i++) total += parsearMonto(prendas[i].precio);
+  total = redondear2(total);
 
   var montoEntrega = parsearMonto(datos.montoEntrega);
   noNegativo(montoEntrega, "El monto de entrega");
@@ -289,7 +293,7 @@ function guardarVentaCreditoPersonal(datos) {
     throw new Error("El monto de entrega no puede ser mayor al total de la venta.");
   }
 
-  var saldoPendiente = total - montoEntrega;
+  var saldoPendiente = redondear2(total - montoEntrega);
 
   var fechaVencimiento = new Date(datos.fechaVencimiento + "T00:00:00");
   var fechaFormateada = Utilities.formatDate(fechaVencimiento, Session.getScriptTimeZone(), "dd/MM/yyyy");
@@ -326,6 +330,7 @@ function guardarVentaCreditoPersonal(datos) {
     filaCredito[slots[s] - 1] = prendas[s] ? (prendas[s].descripcion ? prendas[s].tipo + " - " + prendas[s].descripcion : prendas[s].tipo) : "";
   }
 
+  filaCredito[COL.EXTRAS - 1] = textoExtrasPrendas(prendas, 5, false);
   filaCredito[COL.PRECIO_TOTAL - 1] = total;
   filaCredito[COL.ENTREGA - 1] = montoEntrega;
   filaCredito[COL.SALDO - 1] = saldoPendiente;
@@ -364,6 +369,7 @@ function guardarVentaCreditoPersonal(datos) {
     filaVenta[slotsDesc[j] - 1] = prendas[j] ? (prendas[j].descripcion || "") : "";
     filaVenta[slotsPrecio[j] - 1] = prendas[j] ? parsearMonto(prendas[j].precio) : "";
   }
+  filaVenta[COL_VENTA.EXTRAS - 1] = textoExtrasPrendas(prendas, 4, true);
   filaVenta[COL_VENTA.TOTAL - 1] = total;
   filaVenta[COL_VENTA.METODO_PAGO - 1] = "Crédito personal";
   filaVenta[COL_VENTA.LINK - 1] = urlWhatsApp;
@@ -393,6 +399,7 @@ function obtenerClientesConSaldo() {
   var hoja = obtenerHojaCreditos();
   var datos = hoja.getDataRange().getValues();
   var hoy = new Date();
+  var tz = Session.getScriptTimeZone();
   var resultado = [];
 
   for (var i = 1; i < datos.length; i++) {
@@ -402,8 +409,9 @@ function obtenerClientesConSaldo() {
     var saldo = Number(fila[COL.SALDO - 1]) || 0;
     var vencimiento = new Date(fila[COL.VENCIMIENTO - 1]);
     var ajuste = fila[COL.AJUSTE - 1];
-    var vencido = hoy > vencimiento;
-    var saldoMostrar = (vencido && ajuste === "No") ? saldo * 1.10 : saldo;
+    var vencido = estaVencido(vencimiento, hoy);
+    var saldoMostrar = (vencido && ajuste === "No") ? redondear2(saldo * 1.10) : saldo;
+    var fechaCarga = new Date(fila[COL.FECHA_CARGA - 1]);
 
     resultado.push({
       // Identificador único del crédito puntual — es lo único que se
@@ -415,7 +423,13 @@ function obtenerClientesConSaldo() {
       celular: fila[COL.CELULAR - 1],
       nombreCompleto: fila[COL.NOMBRE - 1] + " " + fila[COL.APELLIDO - 1],
       saldoMostrar: formatearMoneda(saldoMostrar),
-      vencido: vencido
+      vencido: vencido,
+      // Datos para desglosar valor base + interés en pantalla y
+      // recalcularlo si se elige otra fecha de pago.
+      saldoBase: saldo,
+      ajuste: ajuste,
+      vencimiento: Utilities.formatDate(vencimiento, tz, "yyyy-MM-dd"),
+      fechaCarga: isNaN(fechaCarga.getTime()) ? "" : Utilities.formatDate(fechaCarga, tz, "yyyy-MM-dd")
     });
   }
   return resultado;
@@ -431,6 +445,12 @@ function procesarPago(datos) {
   if (!idCredito) {
     throw new Error("No se pudo identificar el crédito a pagar. Volvé a seleccionar el cliente e intentá de nuevo.");
   }
+
+  var ahora = new Date();
+  // Fecha en la que realmente se cobró (por defecto hoy). Permite cargar
+  // pagos retroactivos: el ingreso queda en el día/mes correcto.
+  var fechaPago = parsearFechaPago(datos.fechaPago, ahora);
+  var tz = Session.getScriptTimeZone();
 
   return conLockDeEscritura(function () {
     var hoja = obtenerHojaCreditos();
@@ -459,46 +479,54 @@ function procesarPago(datos) {
       throw new Error("Ese crédito ya está saldado.");
     }
 
+    var fechaCarga = new Date(fila[COL.FECHA_CARGA - 1]);
+    if (!isNaN(fechaCarga.getTime()) && claveDiaFecha(fechaPago) < claveDiaFecha(fechaCarga)) {
+      throw new Error("La fecha de pago no puede ser anterior a la fecha en que se cargó el crédito (" +
+        Utilities.formatDate(fechaCarga, tz, "dd/MM/yyyy") + ").");
+    }
+
     var nombre = fila[COL.NOMBRE - 1];
-    var saldoActual = Number(fila[COL.SALDO - 1]) || 0;
+    var saldoActual = Number(fila[COL.SALDO - 1]) || 0;   // valor base
     var fechaVencimiento = new Date(fila[COL.VENCIMIENTO - 1]);
     var ajuste = fila[COL.AJUSTE - 1];
-    var hoy = new Date();
-    var vencido = hoy > fechaVencimiento;
+    // El vencimiento se evalúa contra la FECHA DE PAGO (no contra hoy):
+    // un pago cargado con fecha anterior al vencimiento no lleva recargo.
+    var vencido = estaVencido(fechaVencimiento, fechaPago);
 
-    var saldoBase = saldoActual;
+    var interes = 0;
     var nuevaFechaVencimiento = fechaVencimiento;
-
-    var saldoRestantePreliminar = saldoActual - montoPagado;
+    var unaSemana = 7 * 24 * 60 * 60 * 1000;
 
     if (ajuste === "No") {
       if (vencido) {
-        saldoBase = saldoActual * 1.10;
+        interes = redondear2(saldoActual * 0.10);
         ajuste = "Recargo";
-        nuevaFechaVencimiento = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000);
-      } else if (saldoRestantePreliminar > 0) {
+        nuevaFechaVencimiento = new Date(fechaPago.getTime() + unaSemana);
+      } else if (redondear2(saldoActual - montoPagado) > 0) {
         ajuste = "Extensión";
-        nuevaFechaVencimiento = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000);
+        nuevaFechaVencimiento = new Date(fechaPago.getTime() + unaSemana);
       }
     }
 
-    if (montoPagado > saldoBase + 1) {
-      throw new Error("El monto pagado ($" + formatearMoneda(montoPagado) + ") no puede ser mayor al saldo pendiente ($" + formatearMoneda(saldoBase) + ").");
+    var totalAdeudado = redondear2(saldoActual + interes);
+
+    if (montoPagado > totalAdeudado + 0.01) {
+      throw new Error("El monto pagado ($" + formatearMoneda(montoPagado) + ") no puede ser mayor al saldo pendiente ($" + formatearMoneda(totalAdeudado) + ").");
     }
 
-    var nuevoSaldo = saldoBase - montoPagado;
+    var nuevoSaldo = redondear2(totalAdeudado - montoPagado);
     var estadoNuevo, fechaPagoTotal;
 
-    if (nuevoSaldo <= 1) {
+    if (nuevoSaldo <= 0.01) {
       nuevoSaldo = 0;
       estadoNuevo = "Pagado";
-      fechaPagoTotal = Utilities.formatDate(hoy, Session.getScriptTimeZone(), "dd/MM/yyyy");
+      fechaPagoTotal = Utilities.formatDate(fechaPago, tz, "dd/MM/yyyy");
     } else {
       estadoNuevo = "Parcial";
       fechaPagoTotal = "";
     }
 
-    var fechaVencFormateada = Utilities.formatDate(nuevaFechaVencimiento, Session.getScriptTimeZone(), "dd/MM/yyyy");
+    var fechaVencFormateada = Utilities.formatDate(nuevaFechaVencimiento, tz, "dd/MM/yyyy");
 
     var mensaje;
     if (estadoNuevo === "Pagado") {
@@ -523,12 +551,18 @@ function procesarPago(datos) {
     hoja.getRange(numeroFila, COL.SALDO, 1, 7).setValues([[
       nuevoSaldo, nuevaFechaVencimiento, ajuste, estadoNuevo, fechaPagoTotal, datos.metodoPago || "", urlWhatsApp
     ]]);
-    registrarMovimientoDinero(nombre, "Pago crédito", montoPagado, datos.metodoPago, datos.cuotas, datos.tarjeta);
+    registrarMovimientoDinero(nombre, "Pago crédito", montoPagado, datos.metodoPago, datos.cuotas, datos.tarjeta, fechaPago);
 
     return {
       urlWhatsApp: urlWhatsApp,
       nombre: nombre,
       estado: estadoNuevo,
+      valorBase: formatearMoneda(saldoActual),
+      interes: formatearMoneda(interes),
+      hayInteres: interes > 0,
+      totalAdeudado: formatearMoneda(totalAdeudado),
+      montoPagado: formatearMoneda(montoPagado),
+      fechaPago: Utilities.formatDate(fechaPago, tz, "dd/MM/yyyy"),
       saldoRestante: formatearMoneda(nuevoSaldo)
     };
   });
@@ -548,6 +582,7 @@ function guardarVenta(datos) {
 
   var total = 0;
   for (var i = 0; i < prendas.length; i++) total += parsearMonto(prendas[i].precio);
+  total = redondear2(total);
 
   var fila = [];
   fila[COL_VENTA.FECHA - 1] = new Date();
@@ -565,6 +600,7 @@ function guardarVenta(datos) {
     fila[slotsPrecio[j] - 1] = prendas[j] ? parsearMonto(prendas[j].precio) : "";
   }
 
+  fila[COL_VENTA.EXTRAS - 1] = textoExtrasPrendas(prendas, 4, true);
   fila[COL_VENTA.TOTAL - 1] = total;
   fila[COL_VENTA.METODO_PAGO - 1] = datos.metodoPago || "";
   fila[COL_VENTA.LINK - 1] = "";
@@ -740,97 +776,6 @@ function actualizarResumenGastos() {
 }
 
 /* =========================================================
- *  MÓDULO STOCK — solo consulta, se carga por copy/paste
- * ========================================================= */
-
-function obtenerHojaStock() {
-  var planilla = SpreadsheetApp.getActiveSpreadsheet();
-  var hoja = planilla.getSheetByName(NOMBRE_HOJA_STOCK);
-
-  if (!hoja) {
-    hoja = planilla.insertSheet(NOMBRE_HOJA_STOCK);
-    hoja.appendRow([
-      "ID", "Fecha ingreso", "Proveedor", "Categoría", "Descripción",
-      "Marca", "Color", "Talle", "Precio de costo", "Precio venta Con IVA",
-      "Precio venta Sin IVA", "Cantidad", "Temporada", "Observaciones"
-    ]);
-  }
-  return hoja;
-}
-
-/**
- * Recorre la hoja Stock y le asigna ID correlativo + Fecha de ingreso
- * (hoy) a cualquier fila que tenga Descripción cargada pero le falte
- * el ID — o sea, filas recién pegadas a mano desde el prompt de precios.
- * Se llama automáticamente cada vez que se abre el módulo Stock.
- */
-function prepararFilasNuevasStock(hoja) {
-  var ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) return;
-
-  var cantidadFilas = ultimaFila - 1;
-  var rangoIdFecha = hoja.getRange(2, COL_STOCK.ID, cantidadFilas, 2); // ID + Fecha ingreso
-  var valoresIdFecha = rangoIdFecha.getValues();
-  var descripciones = hoja.getRange(2, COL_STOCK.DESCRIPCION, cantidadFilas, 1).getValues();
-
-  var maxId = 0;
-  valoresIdFecha.forEach(function (fila) {
-    var idNum = Number(fila[0]);
-    if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
-  });
-
-  var hoy = new Date();
-  var huboCambios = false;
-
-  for (var i = 0; i < valoresIdFecha.length; i++) {
-    var tieneDescripcion = descripciones[i][0] && String(descripciones[i][0]).trim() !== "";
-    var idVacio = valoresIdFecha[i][0] === "" || valoresIdFecha[i][0] === null;
-
-    if (tieneDescripcion && idVacio) {
-      maxId++;
-      valoresIdFecha[i][0] = maxId;
-      if (!valoresIdFecha[i][1]) valoresIdFecha[i][1] = hoy;
-      huboCambios = true;
-    }
-  }
-
-  if (huboCambios) {
-    rangoIdFecha.setValues(valoresIdFecha);
-  }
-}
-
-/**
- * Devuelve todos los productos del Stock para que el formulario los
- * filtre en el navegador (buscador + categoría), sin ir y volver al
- * servidor por cada letra que se escribe.
- */
-function obtenerProductosStock() {
-  var hoja = obtenerHojaStock();
-  prepararFilasNuevasStock(hoja);
-
-  var datos = hoja.getDataRange().getValues();
-  var productos = [];
-
-  for (var i = 1; i < datos.length; i++) {
-    var fila = datos[i];
-    if (!fila[COL_STOCK.DESCRIPCION - 1]) continue; // fila vacía, se ignora
-
-    productos.push({
-      categoria: fila[COL_STOCK.CATEGORIA - 1] || "Otro",
-      descripcion: fila[COL_STOCK.DESCRIPCION - 1],
-      marca: fila[COL_STOCK.MARCA - 1] || "",
-      color: fila[COL_STOCK.COLOR - 1] || "",
-      talle: fila[COL_STOCK.TALLE - 1] || "",
-      precioConIva: formatearMoneda(Number(fila[COL_STOCK.PRECIO_CON_IVA - 1]) || 0),
-      precioSinIva: formatearMoneda(Number(fila[COL_STOCK.PRECIO_SIN_IVA - 1]) || 0),
-      cantidad: Number(fila[COL_STOCK.CANTIDAD - 1]) || 0
-    });
-  }
-
-  return productos;
-}
-
-/* =========================================================
  *  UTILIDADES
  * ========================================================= */
 
@@ -845,17 +790,18 @@ function obtenerHojaPagos() {
   return hoja;
 }
 
-function registrarMovimientoDinero(cliente, tipo, monto, metodoPago, cuotas, tarjeta) {
+function registrarMovimientoDinero(cliente, tipo, monto, metodoPago, cuotas, tarjeta, fecha) {
   if (!monto || monto <= 0) return;
   var hoja = obtenerHojaPagos();
-  hoja.appendRow([new Date(), cliente, tipo, monto, metodoPago || "", cuotas || "", tarjeta || ""]);
+  // "fecha" permite cargar pagos retroactivos: el ingreso cuenta en el
+  // día/mes en que realmente se cobró, no en el que se registró.
+  hoja.appendRow([fecha || new Date(), cliente, tipo, monto, metodoPago || "", cuotas || "", tarjeta || ""]);
 }
 
 /* =========================================================
  *  REGISTRAR COMPRA — control histórico de inversión en
- *  mercadería (NO reemplaza ni modifica la hoja Stock, y NO
- *  calcula ganancias: cada prenda se sigue cargando a mano en
- *  Stock con su propio precio de costo/venta).
+ *  mercadería (NO calcula ganancias: es solo control de cuánto
+ *  se invirtió en cada compra).
  * ========================================================= */
 
 function obtenerHojaCompras() {
@@ -894,7 +840,7 @@ function registrarCompra(datos) {
   var transporte = parsearMonto(datos.transporte);
   noNegativo(transporte, "El transporte");
 
-  var inversionTotal = valorCompra + transporte;
+  var inversionTotal = redondear2(valorCompra + transporte);
   var fecha = new Date(datos.fecha + "T00:00:00");
 
   var hoja = obtenerHojaCompras();
@@ -932,7 +878,7 @@ function obtenerHojaCreditos() {
       "Prenda 1", "Prenda 2", "Prenda 3",
       "Precio total", "Entrega inicial", "Saldo pendiente", "Fecha vencimiento",
       "Ajuste aplicado", "Estado", "Fecha pago total", "Método de pago", "Link WhatsApp",
-      "Prenda 4", "Prenda 5", "Cuotas", "Tarjeta", "ID Crédito"
+      "Prenda 4", "Prenda 5", "Cuotas", "Tarjeta", "ID Crédito", "Prendas adicionales"
     ]);
   } else if (!hoja.getRange(1, COL.ID_CREDITO).getValue()) {
     // La hoja ya existía de antes de que existiera esta columna (o de
@@ -940,6 +886,7 @@ function obtenerHojaCreditos() {
     // agregamos el encabezado sin tocar ninguna fila ni columna existente.
     hoja.getRange(1, COL.ID_CREDITO).setValue("ID Crédito");
   }
+  asegurarEncabezado(hoja, COL.EXTRAS, "Prendas adicionales");
   return hoja;
 }
 
@@ -1041,9 +988,10 @@ function obtenerHojaVentas() {
       "Tipo 2", "Descripción 2", "Precio 2",
       "Tipo 3", "Descripción 3", "Precio 3",
       "Tipo 4", "Descripción 4", "Precio 4",
-      "Total", "Método de pago", "Link WhatsApp", "Cuotas", "Tarjeta"
+      "Total", "Método de pago", "Link WhatsApp", "Cuotas", "Tarjeta", "Prendas adicionales"
     ]);
   }
+  asegurarEncabezado(hoja, COL_VENTA.EXTRAS, "Prendas adicionales");
   return hoja;
 }
 
@@ -1216,10 +1164,89 @@ function limpiarClientesDuplicados() {
   });
 }
 
+/**
+ * Convierte el texto de un campo de monto al número real.
+ * Formato argentino: "." separa miles y "," separa decimales
+ * (ej: "1.250,50" -> 1250.5). Máximo 2 decimales.
+ */
 function parsearMonto(valor) {
   if (!valor) return 0;
   var limpio = String(valor).replace(/\./g, "").replace(",", ".");
-  return parseFloat(limpio) || 0;
+  return redondear2(parseFloat(limpio) || 0);
+}
+
+/** Redondea a 2 decimales (centavos), evitando errores de coma flotante. */
+function redondear2(numero) {
+  var n = Number(numero);
+  if (!isFinite(n)) return 0;
+  return Math.round(n * 100 + (n >= 0 ? 1e-6 : -1e-6)) / 100;
+}
+
+/** Día como "yyyyMMdd" (para comparar fechas sin importar la hora). */
+function claveDiaFecha(fecha) {
+  return Utilities.formatDate(new Date(fecha), Session.getScriptTimeZone(), "yyyyMMdd");
+}
+
+/**
+ * Un crédito está vencido recién DESPUÉS de su fecha límite (el mismo
+ * día de vencimiento todavía se puede pagar sin recargo, como dice el
+ * mensaje de WhatsApp: "Pasada esa fecha se suma un recargo").
+ * Se compara por día, no por hora, contra la fecha de referencia.
+ */
+function estaVencido(vencimiento, fechaReferencia) {
+  return claveDiaFecha(fechaReferencia) > claveDiaFecha(vencimiento);
+}
+
+/** Interpreta "YYYY-MM-DD" como fecha de pago (con la hora actual). */
+function parsearFechaPago(iso, ahora) {
+  if (!iso) return ahora;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+  if (!m) throw new Error("La fecha de pago no es válida.");
+  var f = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), ahora.getHours(), ahora.getMinutes(), ahora.getSeconds());
+  if (f.getMonth() !== Number(m[2]) - 1) throw new Error("La fecha de pago no es válida.");
+  if (claveDiaFecha(f) > claveDiaFecha(ahora)) throw new Error("La fecha de pago no puede ser futura.");
+  return f;
+}
+
+/** Asegura que la hoja tenga la columna (y su encabezado) sin tocar datos. */
+function asegurarEncabezado(hoja, columna, texto) {
+  if (hoja.getLastColumn() >= columna) return;
+  if (hoja.getMaxColumns() < columna) {
+    hoja.insertColumnsAfter(hoja.getMaxColumns(), columna - hoja.getMaxColumns());
+  }
+  hoja.getRange(1, columna).setValue(texto);
+}
+
+/** Texto de las prendas que no entran en las columnas fijas. */
+function textoExtrasPrendas(prendas, desde, conPrecio) {
+  var items = [];
+  for (var i = desde; i < prendas.length; i++) {
+    var p = prendas[i];
+    var t = p.tipo + (p.descripcion ? " - " + p.descripcion : "");
+    if (conPrecio) t += " ($" + formatearMoneda(parsearMonto(p.precio)) + ")";
+    items.push(t);
+  }
+  return items.join(" | ");
+}
+
+function extrasDeFila(fila, columna) {
+  var t = String(fila[columna - 1] || "").trim();
+  return t ? t.split(" | ") : [];
+}
+
+/** Tipos de prenda de una fila de Ventas (columnas fijas + adicionales). */
+function tiposDeVenta(fila) {
+  var base = [fila[COL_VENTA.TIPO1 - 1], fila[COL_VENTA.TIPO2 - 1], fila[COL_VENTA.TIPO3 - 1], fila[COL_VENTA.TIPO4 - 1]].filter(Boolean);
+  var extras = extrasDeFila(fila, COL_VENTA.EXTRAS).map(function (e) {
+    return e.split(" - ")[0].split(" ($")[0];
+  });
+  return base.concat(extras);
+}
+
+/** Prendas de una fila de Creditos (columnas fijas + adicionales). */
+function prendasDeCredito(fila) {
+  var base = [fila[COL.PRENDA1 - 1], fila[COL.PRENDA2 - 1], fila[COL.PRENDA3 - 1], fila[COL.PRENDA4 - 1], fila[COL.PRENDA5 - 1]].filter(Boolean);
+  return base.concat(extrasDeFila(fila, COL.EXTRAS));
 }
 
 /**
@@ -1245,9 +1272,18 @@ function validarCelular(celular) {
   }
 }
 
+/**
+ * Formato argentino con MÁXIMO 2 decimales: miles con ".", decimales
+ * con ",". Si el monto es entero no muestra decimales (1.250);
+ * si tiene centavos muestra siempre 2 (1.250,50).
+ */
 function formatearMoneda(numero) {
-  var redondeado = Math.round(Number(numero));
-  return redondeado.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  var n = redondear2(numero);
+  var negativo = n < 0;
+  var partes = Math.abs(n).toFixed(2).split(".");
+  var entero = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  var texto = partes[1] === "00" ? entero : entero + "," + partes[1];
+  return (negativo ? "-" : "") + texto;
 }
 
 function limpiarCelularArgentina(celular) {
@@ -1282,4 +1318,251 @@ function normalizarCelularParaComparar(celular) {
   var digitos = String(celular || "").replace(/\D/g, "");
   if (digitos.length < 6) return digitos;
   return limpiarCelularArgentina(celular);
+}
+
+/* =========================================================
+ *  HISTORIAL DE MOVIMIENTOS / LIBRO DIARIO
+ *  Devuelve el mes en curso (abierto) y los meses anteriores
+ *  (para desplegables), cada uno agrupado por día, con lo último
+ *  registrado primero.
+ *   - 'venta'   -> ventas al contado (nombre opcional)
+ *   - 'credito' -> crédito nuevo: seña + saldo a financiar
+ *   - 'pago'    -> cobro de un crédito
+ *   - 'gasto'   -> gasto fijo del negocio (sale plata)
+ *   - 'compra'  -> compra de mercadería (sale plata)
+ *  REGLAS PARA NO DUPLICAR PLATA:
+ *   - Las ventas con método "Crédito personal" NO se listan como
+ *     venta: ya aparecen como 'credito'.
+ *   - Las filas "Entrega crédito" de Pagos van dentro de la tarjeta
+ *     del crédito (como seña) pero SÍ suman a lo facturado.
+ *   - "Entró" = plata que efectivamente entró: ventas al contado
+ *     + cobros de crédito + señas (igual que el menú).
+ *   - "Ganancia" del mes = Entró - Gastos fijos - Compras.
+ *     Es una cuenta de CAJA: no incluye el saldo que los clientes
+ *     todavía deben de créditos, ni el valor de la mercadería
+ *     comprada que aún no se vendió.
+ * ========================================================= */
+
+var DIAS_SEMANA_ES = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+function obtenerHistorial() {
+  var tz = Session.getScriptTimeZone();
+  var ahora = new Date();
+
+  function claveMes(f) { return Utilities.formatDate(f, tz, "yyyy-MM"); }
+  function claveDia(f) { return Utilities.formatDate(f, tz, "yyyy-MM-dd"); }
+
+  var movs = [];
+  var ingresosPorDia = {};
+  var ingresosPorMes = {};
+  var creditosPorMes = {};
+  var cantCreditosPorMes = {};
+  var gastosPorDia = {};
+  var gastosPorMes = {};
+  var comprasPorMes = {};
+
+  // Plata que sale (gastos y compras) por día y por mes.
+  function sumarEgreso(f, monto, tipo) {
+    var kd = claveDia(f), km = claveMes(f);
+    gastosPorDia[kd] = (gastosPorDia[kd] || 0) + monto;
+    if (tipo === "gasto") gastosPorMes[km] = (gastosPorMes[km] || 0) + monto;
+    else comprasPorMes[km] = (comprasPorMes[km] || 0) + monto;
+  }
+
+  function sumarIngreso(f, monto) {
+    var kd = claveDia(f), km = claveMes(f);
+    ingresosPorDia[kd] = (ingresosPorDia[kd] || 0) + monto;
+    ingresosPorMes[km] = (ingresosPorMes[km] || 0) + monto;
+  }
+
+  // ---------- 1) Ventas al contado ----------
+  var ventas = obtenerHojaVentas().getDataRange().getValues();
+  for (var i = 1; i < ventas.length; i++) {
+    var fv = ventas[i];
+    var fecha = new Date(fv[COL_VENTA.FECHA - 1]);
+    if (isNaN(fecha.getTime())) continue;
+    if (fv[COL_VENTA.METODO_PAGO - 1] === "Crédito personal") continue;
+
+    var monto = Number(fv[COL_VENTA.TOTAL - 1]) || 0;
+    var nombre = (fv[COL_VENTA.NOMBRE - 1] + " " + fv[COL_VENTA.APELLIDO - 1]).trim();
+    var tipos = tiposDeVenta(fv);
+
+    sumarIngreso(fecha, monto);
+    movs.push({
+      ts: fecha.getTime(),
+      tipo: "venta",
+      // Con cliente registrado: nombre arriba y prendas abajo.
+      // Sin cliente: directamente las prendas como título.
+      titulo: nombre || tipos.join(", ") || "Venta",
+      detalle: nombre ? tipos.join(", ") : "",
+      metodo: fv[COL_VENTA.METODO_PAGO - 1] || "",
+      monto: formatearMoneda(monto)
+    });
+  }
+
+  // ---------- 2) Pagos (cobros de crédito + señas) ----------
+  var pagos = obtenerHojaPagos().getDataRange().getValues();
+  for (var p = 1; p < pagos.length; p++) {
+    var fp = pagos[p];
+    var fechaP = new Date(fp[COL_PAGO.FECHA - 1]);
+    if (isNaN(fechaP.getTime())) continue;
+
+    var montoP = Number(fp[COL_PAGO.MONTO - 1]) || 0;
+    sumarIngreso(fechaP, montoP);
+
+    // La seña ("Entrega crédito") se muestra dentro del crédito, no sola.
+    if (fp[COL_PAGO.TIPO - 1] === "Entrega crédito") continue;
+
+    movs.push({
+      ts: fechaP.getTime(),
+      tipo: "pago",
+      titulo: fp[COL_PAGO.CLIENTE - 1] || "Cliente",
+      detalle: "Pago de crédito",
+      metodo: fp[COL_PAGO.METODO - 1] || "",
+      monto: formatearMoneda(montoP)
+    });
+  }
+
+  // ---------- 3) Créditos otorgados ----------
+  var creditos = obtenerHojaCreditos().getDataRange().getValues();
+  for (var c = 1; c < creditos.length; c++) {
+    var fc = creditos[c];
+    var fechaC = new Date(fc[COL.FECHA_CARGA - 1]);
+    if (isNaN(fechaC.getTime())) continue;
+
+    var precioTotal = Number(fc[COL.PRECIO_TOTAL - 1]) || 0;
+    var entrega = Number(fc[COL.ENTREGA - 1]) || 0;
+    var saldoInicial = Math.max(precioTotal - entrega, 0);
+
+    var kmC = claveMes(fechaC);
+    creditosPorMes[kmC] = (creditosPorMes[kmC] || 0) + saldoInicial;
+    cantCreditosPorMes[kmC] = (cantCreditosPorMes[kmC] || 0) + 1;
+
+    var prendas = prendasDeCredito(fc);
+    var venc = new Date(fc[COL.VENCIMIENTO - 1]);
+
+    movs.push({
+      ts: fechaC.getTime(),
+      tipo: "credito",
+      titulo: (fc[COL.NOMBRE - 1] + " " + fc[COL.APELLIDO - 1]).trim() || "Crédito",
+      detalle: prendas.join(", "),
+      entrega: formatearMoneda(entrega),
+      saldo: formatearMoneda(saldoInicial),
+      vence: isNaN(venc.getTime()) ? "" : Utilities.formatDate(venc, tz, "dd/MM/yyyy")
+    });
+  }
+
+  // ---------- 4) Gastos fijos (sale plata) ----------
+  var gastos = obtenerHojaGastos().getDataRange().getValues();
+  for (var gi = 1; gi < gastos.length; gi++) {
+    var fg = gastos[gi];
+    var fechaG = new Date(fg[COL_GASTO.FECHA - 1]);
+    if (isNaN(fechaG.getTime())) continue;
+
+    var montoG = Number(fg[COL_GASTO.MONTO - 1]) || 0;
+    sumarEgreso(fechaG, montoG, "gasto");
+    movs.push({
+      ts: fechaG.getTime(),
+      tipo: "gasto",
+      titulo: fg[COL_GASTO.CATEGORIA - 1] || "Gasto",
+      detalle: fg[COL_GASTO.OBSERVACIONES - 1] || "",
+      monto: formatearMoneda(montoG)
+    });
+  }
+
+  // ---------- 5) Compras de mercadería (sale plata) ----------
+  var compras = obtenerHojaCompras().getDataRange().getValues();
+  for (var ci = 1; ci < compras.length; ci++) {
+    var fcm = compras[ci];
+    var fechaCm = new Date(fcm[COL_COMPRA.FECHA - 1]);
+    if (isNaN(fechaCm.getTime())) continue;
+
+    var montoCm = Number(fcm[COL_COMPRA.INVERSION_TOTAL - 1]) || 0;
+    sumarEgreso(fechaCm, montoCm, "compra");
+    movs.push({
+      ts: fechaCm.getTime(),
+      tipo: "compra",
+      titulo: fcm[COL_COMPRA.PROVEEDOR - 1] || "Compra",
+      detalle: fcm[COL_COMPRA.OBSERVACIONES - 1] || "",
+      monto: formatearMoneda(montoCm)
+    });
+  }
+
+  // ---------- Orden: lo último registrado primero ----------
+  movs.sort(function (a, b) { return b.ts - a.ts; });
+
+  // Arma los totales de un mes: entró, gastos, compras y ganancia.
+  function totalesMes(km) {
+    var entro = ingresosPorMes[km] || 0;
+    var gas = gastosPorMes[km] || 0;
+    var comp = comprasPorMes[km] || 0;
+    var neto = redondear2(entro - gas - comp);
+    return {
+      entro: formatearMoneda(entro),
+      gastos: formatearMoneda(gas),
+      compras: formatearMoneda(comp),
+      ganancia: formatearMoneda(Math.abs(neto)),
+      gananciaNegativa: neto < 0,
+      creditos: formatearMoneda(creditosPorMes[km] || 0),
+      cantCreditos: cantCreditosPorMes[km] || 0
+    };
+  }
+
+  var hoyKey = claveDia(ahora);
+  var ayerKey = claveDia(new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - 1));
+
+  // ---------- Agrupar por mes y, dentro, por día ----------
+  var meses = [];
+  var mesPorClave = {};
+  var diaPorClave = {};
+
+  movs.forEach(function (m) {
+    var d = new Date(m.ts);
+    var km = claveMes(d);
+    var kd = claveDia(d);
+
+    if (!mesPorClave[km]) {
+      mesPorClave[km] = totalesMes(km);
+      mesPorClave[km].clave = km;
+      mesPorClave[km].nombre = MESES[Number(Utilities.formatDate(d, tz, "M")) - 1];
+      mesPorClave[km].anio = Number(Utilities.formatDate(d, tz, "yyyy"));
+      mesPorClave[km].dias = [];
+      meses.push(mesPorClave[km]);
+    }
+
+    if (!diaPorClave[kd]) {
+      var etiqueta;
+      if (kd === hoyKey) etiqueta = "Hoy";
+      else if (kd === ayerKey) etiqueta = "Ayer";
+      else etiqueta = DIAS_SEMANA_ES[Number(Utilities.formatDate(d, tz, "u"))] + " " + Utilities.formatDate(d, tz, "dd/MM");
+
+      diaPorClave[kd] = {
+        etiqueta: etiqueta,
+        ingresos: formatearMoneda(ingresosPorDia[kd] || 0),
+        egresos: formatearMoneda(gastosPorDia[kd] || 0),
+        hayEgresos: (gastosPorDia[kd] || 0) > 0,
+        movs: []
+      };
+      mesPorClave[km].dias.push(diaPorClave[kd]);
+    }
+
+    delete m.ts; // no hace falta en el navegador
+    diaPorClave[kd].movs.push(m);
+  });
+
+  // El mes en curso siempre se devuelve (aunque todavía no tenga
+  // movimientos) para poder mostrar los totales en $0.
+  var claveActual = claveMes(ahora);
+  var actual = mesPorClave[claveActual];
+  if (!actual) {
+    actual = totalesMes(claveActual);
+    actual.clave = claveActual;
+    actual.nombre = MESES[ahora.getMonth()];
+    actual.anio = ahora.getFullYear();
+    actual.dias = [];
+  }
+
+  var anteriores = meses.filter(function (m) { return m.clave !== claveActual; });
+
+  return { actual: actual, anteriores: anteriores };
 }
