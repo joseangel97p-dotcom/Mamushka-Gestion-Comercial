@@ -4,7 +4,7 @@ Desarrollé esta aplicación para ayudar con la gestión del negocio familiar de
 
 Te comparto la demo en donde la podes probar:
 
-https://script.google.com/macros/s/AKfycbzMXOUD2yF5qUf1sJFm60uJ3Wo94HOSx0rx76BGPWz7vWJtMYlYcxsV6adORPZW-GiH/exec
+https://script.google.com/macros/s/AKfycbzss1a7LVXfUd-hWRZq9xxlvmdpSUtOcdamm7e3UD9GdyJmug3Hma6H7B8GW7mugOVU/exec
 
 
 <img width="447" height="624" alt="mamu" src="https://github.com/user-attachments/assets/81b4e7d5-4d8d-4e7d-b549-ba03acc8504d" />
