@@ -6,8 +6,7 @@ Te comparto la demo en donde la podes probar:
 
 https://script.google.com/macros/s/AKfycbzss1a7LVXfUd-hWRZq9xxlvmdpSUtOcdamm7e3UD9GdyJmug3Hma6H7B8GW7mugOVU/exec
 
-
-<img width="447" height="624" alt="mamu" src="https://github.com/user-attachments/assets/81b4e7d5-4d8d-4e7d-b549-ba03acc8504d" />
+<img width="406" height="608" alt="ultima" src="https://github.com/user-attachments/assets/03cfc664-6c35-4a5d-8dc6-dd47908027e2" />
 
 
 ## Funcionalidades
