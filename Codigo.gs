@@ -3,8 +3,9 @@
  *  MAMUSHKA – Sistema de gestión
  * ============================================================
  *  Módulos:
- *   - Menú: ventas de hoy (clickeable) + créditos pendientes
- *     (clickeable) + accesos a los 4 formularios
+ *   - Menú: balance del mes en curso (clickeable: despliega el
+ *     detalle del mes y los meses anteriores) + créditos
+ *     pendientes (clickeable) + accesos a los formularios
  *   - Nuevo crédito: prendas dinámicas (hasta 5, tipo+descripción)
  *   - Registrar pago: total o parcial, con recargo/extensión
  *   - Cargar venta: prendas dinámicas con precio, guarda directo
@@ -13,7 +14,8 @@
  *   - Registrar gasto: solo gastos FIJOS del negocio, con
  *     consolidado del mes actual clickeable
  *   - Registrar compra: control de inversión en mercadería
- *   - Historial: libro diario de movimientos (ver Historial.gs)
+ *   - Historial: libro diario de movimientos, se muestra dentro del
+ *     balance del menú (ver sección HISTORIAL al final de este archivo)
  *
  *  Hojas (se crean solas):
  *   - "Creditos", "Clientes", "Ventas", "Gastos", "Pagos", "Compras"
@@ -174,100 +176,18 @@ function obtenerDatosMenu() {
     return orden[a.color] - orden[b.color];
   });
 
-  var ventasHoy = calcularVentasHoy();
-  var ventasMes = calcularVentasMes();
-
   return {
     totalPendiente: formatearMoneda(total),
     cantidad: clientes.length,
-    clientes: clientes,
-    ventasHoy: ventasHoy,
-    ventasMes: ventasMes
+    clientes: clientes
   };
-}
-
-function calcularVentasHoy() {
-  var resultadoVentas = sumarPeriodo(obtenerHojaVentas(), 'venta', true);
-  var resultadoPagos = sumarPeriodo(obtenerHojaPagos(), 'pago', true);
-
-  return {
-    total: formatearMoneda(resultadoVentas.total + resultadoPagos.total),
-    cantidad: resultadoVentas.detalle.length + resultadoPagos.detalle.length,
-    detalle: resultadoVentas.detalle.concat(resultadoPagos.detalle)
-  };
-}
-
-function calcularVentasMes() {
-  var resultadoVentas = sumarPeriodo(obtenerHojaVentas(), 'venta', false);
-  var resultadoPagos = sumarPeriodo(obtenerHojaPagos(), 'pago', false);
-
-  return {
-    total: formatearMoneda(resultadoVentas.total + resultadoPagos.total),
-    cantidad: resultadoVentas.detalle.length + resultadoPagos.detalle.length,
-    detalle: resultadoVentas.detalle.concat(resultadoPagos.detalle)
-  };
-}
-
-/**
- * Suma los movimientos de una hoja (Ventas o Pagos) dentro del período
- * pedido (hoy o el mes actual), devolviendo total + detalle para mostrar.
- */
-function sumarPeriodo(hoja, origen, soloHoy) {
-  var datos = hoja.getDataRange().getValues();
-  var hoy = new Date();
-  var total = 0;
-  var detalle = [];
-
-  for (var i = 1; i < datos.length; i++) {
-    var fila = datos[i];
-    var fecha, monto, cliente, descripcion;
-
-    if (origen === 'venta') {
-      fecha = new Date(fila[COL_VENTA.FECHA - 1]);
-      if (isNaN(fecha.getTime())) continue;
-
-      // Una venta con "Crédito personal" NO representa dinero que entró
-      // hoy: el total de esa venta es el valor de la mercadería, no lo
-      // cobrado. Lo único que efectivamente ingresó (la entrega, y más
-      // adelante cada pago de saldo) ya se contabiliza por separado a
-      // través de la hoja Pagos. Sumar también esta fila duplicaría esa
-      // plata (contaría la venta completa Y la entrega/pago por su lado).
-      if (fila[COL_VENTA.METODO_PAGO - 1] === "Crédito personal") continue;
-
-      monto = Number(fila[COL_VENTA.TOTAL - 1]) || 0;
-      var nombre = (fila[COL_VENTA.NOMBRE - 1] + " " + fila[COL_VENTA.APELLIDO - 1]).trim();
-      cliente = nombre || "Sin nombre";
-      var tipos = tiposDeVenta(fila);
-      descripcion = tipos.join(", ") || "Venta";
-    } else {
-      fecha = new Date(fila[COL_PAGO.FECHA - 1]);
-      if (isNaN(fecha.getTime())) continue;
-      monto = Number(fila[COL_PAGO.MONTO - 1]) || 0;
-      cliente = fila[COL_PAGO.CLIENTE - 1];
-      descripcion = fila[COL_PAGO.TIPO - 1];
-    }
-
-    var mismoMesYAnio = fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear();
-    if (!mismoMesYAnio) continue;
-    if (soloHoy && fecha.getDate() !== hoy.getDate()) continue;
-
-    total += monto;
-    detalle.push({
-      cliente: cliente,
-      productos: descripcion,
-      monto: formatearMoneda(monto),
-      fecha: Utilities.formatDate(fecha, Session.getScriptTimeZone(), "dd/MM")
-    });
-  }
-
-  return { total: total, detalle: detalle };
 }
 
 /* =========================================================
  *  CRÉDITO PERSONAL — se carga desde "Cargar venta" eligiendo ese
  *  método de pago (ya no existe como formulario/botón aparte).
  *  Reutiliza las prendas ya cargadas en la venta y además guarda
- *  fila en Ventas (para el consolidado) y en Creditos (para el
+ *  fila en Ventas (para el balance y el historial) y en Creditos (para el
  *  seguimiento de saldo/vencimiento/recargo, sin tocar esa lógica).
  * ========================================================= */
 
@@ -353,7 +273,7 @@ function guardarVentaCreditoPersonal(datos) {
     return id;
   });
 
-  // ---- Fila en Ventas (para que sume en el consolidado de ventas) ----
+  // ---- Fila en Ventas (para que sume en el balance y el historial) ----
   var hojaVentas = obtenerHojaVentas();
   var filaVenta = [];
   filaVenta[COL_VENTA.FECHA - 1] = new Date();

@@ -74,12 +74,15 @@
   }
   .detalle-consolidado div { display: flex; justify-content: space-between; padding: 3px 0; }
   .consolidado.abierto .detalle-consolidado { display: block; }
-  .tabs-ventas { display: flex; gap: 8px; margin-bottom: 10px; }
-  .tab-venta {
-    flex: 1; text-align: center; padding: 6px; border-radius: 8px; font-size: 12px;
-    font-weight: 600; cursor: pointer; background: #fff; color: #999; border: 1px solid #f0d9e0;
+  /* --- Balance del mes (menú) con detalle desplegable --- */
+  #consolidadoBalance { margin-bottom: 12px; }
+  #consolidadoBalance .balance-cabecera { cursor: pointer; }
+  #consolidadoBalance .balance-tocar { font-size: 12px; color: #e75480; font-weight: 600; margin-top: 10px; }
+  .detalle-historial {
+    display: none; text-align: left; margin-top: 12px; padding-top: 4px;
+    border-top: 1px solid rgba(231,84,128,0.2); cursor: default;
   }
-  .tab-venta.activo { background: #e75480; color: #fff; border-color: #e75480; }
+  .consolidado.abierto .detalle-historial { display: block; }
 
   /* --- Lista de clientes con crédito --- */
   .lista-clientes { max-height: 260px; overflow-y: auto; margin-bottom: 10px; }
@@ -227,15 +230,20 @@
 
     <!-- ================= MENÚ ================= -->
     <div id="vistaMenu">
-      <div class="consolidado" id="consolidadoVentas">
-        <div class="tabs-ventas">
-          <div class="tab-venta activo" id="tabHoy" onclick="event.stopPropagation(); cambiarTabVentas('hoy')">Hoy</div>
-          <div class="tab-venta" id="tabMes" onclick="event.stopPropagation(); cambiarTabVentas('mes')">Mes</div>
+      <!-- Balance del mes en curso. Al tocar la cabecera se despliega el
+           detalle del mes y, debajo, los meses anteriores contraídos. -->
+      <div class="consolidado hist-hero" id="consolidadoBalance">
+        <div class="balance-cabecera" onclick="toggleBalance()">
+          <div class="h-label" id="histLabel">Ganancia</div>
+          <div class="h-monto" id="histMonto">$0</div>
+          <div class="h-sub">lo que entró − gastos fijos − compras</div>
+          <div id="histResumen"></div>
+          <div class="h-cred" id="histCred" style="display:none;"></div>
+          <div class="balance-tocar" id="histTocar">▼ Tocar para ver el detalle</div>
         </div>
-        <div onclick="toggleConsolidado('consolidadoVentas')">
-          <div class="monto" id="ventasMonto">$0</div>
-          <div class="label" id="ventasLabel">cargando...</div>
-          <div class="detalle-consolidado" id="detalleVentas"></div>
+        <div class="detalle-historial">
+          <div id="histMesActual"><div class="loading">Cargando movimientos...</div></div>
+          <div id="histAnteriores"></div>
         </div>
       </div>
 
@@ -250,7 +258,6 @@
       <button class="btn" onclick="mostrarForm3()">🛍️ Registrar ingreso</button>
       <button class="btn-secundario" onclick="mostrarFormGasto()">💸 Registrar gasto</button>
       <button class="btn-secundario" onclick="abrirModalCompra()">🧾 Registrar compra</button>
-      <button class="btn-secundario" onclick="mostrarHistorial()">📒 Historial</button>
     </div>
 
     <!-- ================= FORM 3: CARGAR VENTA / REGISTRAR INGRESO ================= -->
@@ -368,7 +375,7 @@
       </div>
 
       <div id="postVentaCampos" style="display:none;">
-        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Venta cargada ✅<br>Se sumó al total de hoy.</p>
+        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Venta cargada ✅<br>Se sumó al balance del mes.</p>
         <p style="font-size:13px; color:#888; margin-bottom:10px; text-align:center;">¿Enviar comprobante por WhatsApp?</p>
 
         <div id="datosClienteVenta" style="display:none;">
@@ -387,7 +394,7 @@
       </div>
 
       <div id="resultadoCreditoPersonal" style="display:none;">
-        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Crédito personal cargado ✅<br>Se sumó al total de hoy.</p>
+        <p style="font-size:14px; color:#555; text-align:center; margin:8px 0 16px;">Crédito personal cargado ✅<br>Se sumó al balance del mes.</p>
         <div class="resumen" id="resumenCreditoPersonal"></div>
         <a class="btn-wpp" id="linkWhatsAppCreditoPersonal" href="#" target="_blank">📲 Enviar por WhatsApp</a>
         <button class="btn-nuevo" onclick="mostrarForm3()">+ Cargar otra venta</button>
@@ -417,20 +424,6 @@
 
       <button class="btn" id="btnGuardarGasto" onclick="guardarGasto()">Guardar gasto</button>
       <div class="error" id="errorGasto"></div>
-    </div>
-
-    <!-- ================= HISTORIAL DE MOVIMIENTOS ================= -->
-    <div id="vistaHistorial" style="display:none;">
-      <div class="hist-hero">
-        <div class="h-label" id="histLabel">Ganancia</div>
-        <div class="h-monto" id="histMonto">$0</div>
-        <div class="h-sub">lo que entró − gastos fijos − compras</div>
-        <div id="histResumen"></div>
-        <div class="h-cred" id="histCred" style="display:none;"></div>
-      </div>
-
-      <div id="histMesActual"><div class="loading">Cargando movimientos...</div></div>
-      <div id="histAnteriores"></div>
     </div>
 
   </div>
@@ -493,7 +486,7 @@
   /* ---------- Navegación entre vistas ---------- */
 
   function ocultarTodo() {
-    ['vistaMenu','vistaForm3','vistaFormGasto','vistaHistorial'].forEach(function(id){
+    ['vistaMenu','vistaForm3','vistaFormGasto'].forEach(function(id){
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('volverBtn') && document.getElementById('volverBtn').remove();
@@ -564,39 +557,11 @@
 
   /* ---------- Menú: consolidados ---------- */
 
-  var datosMenuCache = null;
-  var tabVentaActiva = 'hoy';
-
-  function cambiarTabVentas(tab) {
-    tabVentaActiva = tab;
-    document.getElementById('tabHoy').classList.toggle('activo', tab === 'hoy');
-    document.getElementById('tabMes').classList.toggle('activo', tab === 'mes');
-    pintarVentas();
-  }
-
-  function pintarVentas() {
-    if (!datosMenuCache) return;
-    var datos = tabVentaActiva === 'hoy' ? datosMenuCache.ventasHoy : datosMenuCache.ventasMes;
-    var etiquetaPeriodo = tabVentaActiva === 'hoy' ? 'hoy' : 'este mes';
-
-    document.getElementById('ventasMonto').textContent = '$' + datos.total;
-    document.getElementById('ventasLabel').textContent = datos.cantidad + (datos.cantidad === 1 ? ' venta ' : ' ventas ') + etiquetaPeriodo + ' · tocar para ver detalle';
-
-    var detalleDiv = document.getElementById('detalleVentas');
-    detalleDiv.innerHTML = datos.detalle.length === 0
-      ? '<div class="vacio">Sin ventas todavía</div>'
-      : datos.detalle.map(function (v) {
-          var prefijo = (tabVentaActiva === 'mes' && v.fecha) ? v.fecha + ' — ' : '';
-          return '<div><span>' + prefijo + v.cliente + '</span><strong>' + v.productos + ' — $' + v.monto + '</strong></div>';
-        }).join('');
-  }
-
   function cargarDatosMenu() {
+    cargarHistorial();
+
     google.script.run
       .withSuccessHandler(function (datos) {
-        datosMenuCache = datos;
-        pintarVentas();
-
         document.getElementById('totalPendiente').textContent = '$' + datos.totalPendiente;
         document.getElementById('cantidadCreditos').textContent = datos.cantidad + (datos.cantidad === 1 ? ' crédito pendiente · tocar para ver detalle' : ' créditos pendientes · tocar para ver detalle');
 
@@ -1224,21 +1189,21 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function mostrarHistorial() {
-    ocultarTodo();
-    agregarBotonVolver();
-    document.getElementById('subtitulo').textContent = 'Historial';
-    document.getElementById('vistaHistorial').style.display = 'block';
-    cargarHistorial();
+  // Abre/cierra el detalle del balance del mes (menú).
+  function toggleBalance() {
+    var abierto = document.getElementById('consolidadoBalance').classList.toggle('abierto');
+    document.getElementById('histTocar').textContent = abierto ? '▲ Tocar para ocultar el detalle' : '▼ Tocar para ver el detalle';
   }
 
   function cargarHistorial() {
+    document.getElementById('histLabel').textContent = 'Cargando balance...';
     document.getElementById('histMesActual').innerHTML = '<div class="loading">Cargando movimientos...</div>';
     document.getElementById('histAnteriores').innerHTML = '';
     google.script.run
       .withSuccessHandler(pintarHistorial)
       .withFailureHandler(function () {
-        document.getElementById('histMesActual').innerHTML = '<div class="vacio">No se pudo cargar el historial. Probá de nuevo.</div>';
+        document.getElementById('histLabel').textContent = 'Balance del mes';
+        document.getElementById('histMesActual').innerHTML = '<div class="vacio">No se pudo cargar el balance. Probá de nuevo.</div>';
       })
       .obtenerHistorial();
   }
